@@ -138,6 +138,56 @@ below, with full generator documentation.)*
   copyright in this new contribution held by **UKRI**.
 - **Licence:** MIT (the project's existing terms; see [`../LICENSES.txt`](../LICENSES.txt)).
 
+## `fin_heat_dissipation_sample.csv` (new — Explore mode)
+
+- **Location:** `examples/fin_heat_dissipation_sample.csv`
+
+- **Rows:** 500 (plus header)
+
+- **Columns (units embedded in the names):** `h_w_m2k`, `area_m2`, `delta_t_k`,
+  `heat_dissipation_w` (target).
+
+- **Purpose:** a synthetic, problem-led **Explore**-mode demonstration — predict heat dissipation from a convective heat-transfer coefficient, heat-transfer surface area, and temperature difference.
+
+- **Status:** **synthetic, documented, physically-informed — a training demonstration only.** It is
+  **not** experimental, validated, safety-grade, or design-quality data, and must not be used for real
+  design decisions.
+
+- **Governing physics:** Newton's law of cooling, `Q = h · A · ΔT`, where `Q` is the heat-transfer rate
+  in watts, `h` is the convective heat-transfer coefficient in W/m²K, `A` is the heat-transfer surface
+  area in m², and `ΔT` is the temperature difference in K.
+
+- **Assumptions / simplifications:** steady-state convective heat transfer; the heat-transfer coefficient
+  is treated as an input; the surface temperature and surrounding-fluid temperature are represented by
+  their temperature difference; radiation, conduction losses through supports, and other secondary effects
+  are not modelled.
+
+- **Sampling ranges:** heat-transfer coefficient 5–500 W/m²K (uniform); surface area 0.001–0.5 m²
+  (uniform); temperature difference 5–100 K (uniform).
+
+- **Noise model:** each heat-dissipation value is multiplied by `exp(N(0, σ))` with σ = 0.05
+  (~5% relative scatter) — multiplicative lognormal noise, so values stay strictly positive.
+
+- **Determinism:** generated with numpy `default_rng(seed)`, default **seed = 42**; the same seed,
+  row count, and numpy version reproduce the same output.
+
+- **Generator (documented, reproducible):**
+  [`../scripts/generate_fin_heat_dissipation.py`](../scripts/generate_fin_heat_dissipation.py). Regenerate
+  the bundled file with:
+
+  ```bash
+  python3 scripts/generate_fin_heat_dissipation.py --rows 500 --seed 42
+  ```
+
+- **Tests:** [`../tests/test_fin_dataset.py`](../tests/test_fin_dataset.py) checks the columns/units,
+  row count, strictly-positive/finite values, sensible ranges, determinism, and that the committed CSV
+  matches a fresh default generation byte-for-byte.
+
+- **Introducing author / copyright:** new Engineering ML Studio contribution; copyright in this new
+  contribution held by **UKRI**.
+
+- **Licence:** MIT (the project's existing terms; see [`../LICENSES.txt`](../LICENSES.txt)).
+
 ---
 
 ## Recommended follow-up (optional)
