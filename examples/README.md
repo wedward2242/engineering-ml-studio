@@ -212,6 +212,43 @@ below, with full generator documentation.)*
 - **Introducing author / copyright:** new Engineering ML Studio contribution; copyright in this new contribution held by **UKRI**.
 - **Licence:** Apache-2.0 (the project's licence); see the repository licence files.
 
+## `orifice_flow_sample.csv` (new — Explore mode)
+
+* **Location:** `examples/orifice_flow_sample.csv`
+
+* **Rows:** 500 (plus header)
+
+* **Columns (units embedded in the names):** `pressure_difference_pa`, `orifice_diameter_m`, `fluid_density_kg_m3`, `discharge_coefficient`, `flow_rate_m3_s` (target).
+
+* **Purpose:** a synthetic, problem-led **Explore**-mode demonstration — predict volumetric flow rate through a simplified circular orifice from pressure difference, orifice diameter, fluid density, and an effective discharge coefficient.
+
+* **Status:** **synthetic, documented, physically-informed — a training demonstration only.** It is **not** experimental, validated, safety-grade, or design-quality data, and must not be used for real design decisions.
+
+* **Governing physics:** the simplified orifice-flow relationship `Q = C_d · A · sqrt(2 · Δp / ρ)`, where `Q` is volumetric flow rate in m³/s, `C_d` is the discharge coefficient, `A` is the orifice area in m², `Δp` is the pressure difference in Pa, and `ρ` is the fluid density in kg/m³. For a circular orifice, `A = π · d² / 4`.
+
+* **Coefficient/source note:** ISO 5167-2:2022 provides the standardised treatment of measurement using orifice plates in full circular conduits. This dataset uses a deliberately simplified representation and does **not** attempt to reproduce the full ISO 5167 calculation procedure. The discharge-coefficient range is a **project-defined effective range for this synthetic teaching dataset**, rather than a universal literature constant.
+
+* **Assumptions / simplifications:** steady, single-phase, incompressible flow; positive pressure difference representing the pressure drop across the orifice; circular opening; fluid density treated as constant for each generated sample. Compressibility, cavitation, multiphase flow, detailed upstream/downstream geometry, pipe fittings, installation effects, and Reynolds-number-dependent discharge-coefficient behaviour are not modelled explicitly.
+
+* **Sampling ranges:** pressure difference 1,000–100,000 Pa (uniform); orifice diameter 0.005–0.050 m (uniform); fluid density 850–1,050 kg/m³ (uniform); discharge coefficient 0.60–0.65 (uniform). These are **synthetic teaching ranges** and are not claimed to represent all real orifice-flow applications.
+
+* **Noise model:** each flow-rate value is multiplied by `exp(N(0, σ))` with `σ = 0.05` (~5% relative scatter) — multiplicative lognormal noise, so values remain strictly positive.
+
+* **Determinism:** generated with numpy `default_rng(seed)`, default **seed = 42**; the same seed, row count, and parameters reproduce the same generated dataset.
+
+* **Generator (documented, reproducible):** [`../scripts/generate_orifice_flow.py`](../scripts/generate_orifice_flow.py). Regenerate the bundled file with:
+
+  ```bash
+  python3 scripts/generate_orifice_flow.py --rows 500 --seed 42
+  ```
+
+* **Tests:** [`../tests/test_orifice_dataset.py`](../tests/test_orifice_dataset.py) checks the columns/units, row count, strictly-positive/finite values, sensible input ranges, determinism, validation, and that the committed CSV matches a fresh default generation byte-for-byte.
+
+* **Introducing author / copyright:** new Engineering ML Studio contribution; copyright in this new contribution held by **UKRI**.
+
+* **Licence:** Apache-2.0 (the project's licence); see the repository licence files.
+
+
 ---
 
 ## Recommended follow-up (optional)
