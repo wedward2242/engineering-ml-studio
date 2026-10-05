@@ -188,6 +188,30 @@ below, with full generator documentation.)*
 
 - **Licence:** MIT (the project's existing terms; see [`../LICENSES.txt`](../LICENSES.txt)).
 
+## `steel_tensile_strength_sample.csv` (new — Explore mode)
+
+- **Location:** `examples/steel_tensile_strength_sample.csv`
+- **Rows:** 500 (plus header)
+- **Columns (units embedded in the names):** `carbon_wt_pct`, `manganese_wt_pct`, `silicon_wt_pct`, `grain_size_um`, `tempering_temperature_c`, `test_temperature_c`, `yield_strength_mpa` (target).
+- **Purpose:** a synthetic, problem-led **Explore**-mode demonstration — predict structural-steel yield strength from chemical composition, grain size, tempering temperature, and tensile-test temperature.
+- **Status:** **synthetic, documented, physically-informed — a training demonstration only.** It is **not** experimental, validated, safety-grade, or design-quality data, and must not be used for structural design, safety-critical qualification, material certification, or real engineering decisions.
+- **Governing physics:** Hall–Petch strengthening combined with approximately linear solid-solution strengthening:
+  `σ_y = σ_0 + k · d^(-1/2) + a_C · C + a_Mn · Mn + a_Si · Si`
+  where grain size contributes nonlinearly through `d^(-1/2)`, while the composition terms are approximately linear.
+- **Coefficient sources:** `σ_0 = 53.9 MPa`, `a_Mn = 32.3 MPa/wt%`, and `a_Si = 83.2 MPa/wt%` are based on literature values used for simplified structural-steel strengthening relationships. The Pickering relationship gives a Hall–Petch coefficient of `17.4 MPa·√mm`, which is converted here to approximately `550.2 MPa·√µm` to match the grain-size unit used by the generator. The carbon coefficient (`a_C = 5000 MPa/wt%`) and the temperature coefficients are project-defined effective coefficients for this synthetic teaching dataset rather than universal literature material constants.
+- **Assumptions / simplifications:** grain size is treated as the effective microstructural variable relevant to yielding; carbon, manganese and silicon contributions are approximated as linear; tempering temperature and test temperature are represented using simplified empirical corrections. Phase composition, heat-treatment history, dislocation density, precipitation, texture, strain rate, and other metallurgical effects are not modelled explicitly.
+- **Sampling ranges:** carbon 0.02–0.12 wt% (uniform); manganese 0.30–1.60 wt% (uniform); silicon 0.05–0.50 wt% (uniform); grain size 5–50 µm (uniform); tempering temperature 200–650 °C (uniform); test temperature −20–100 °C (uniform).
+- **Noise model:** each yield-strength value is multiplied by `exp(N(0, σ))` with `σ = 0.04` (~4% relative scatter) — multiplicative lognormal noise, so values remain strictly positive.
+- **Determinism:** generated with numpy `default_rng(seed)`, default **seed = 42**; the same seed, row count, and numpy version reproduce byte-identical output.
+- **Generator (documented, reproducible):** [`../scripts/generate_steel_tensile_strength.py`](../scripts/generate_steel_tensile_strength.py). Regenerate the bundled file with:
+
+  ```bash
+  python3 scripts/generate_steel_tensile_strength.py --rows 500 --seed 42
+  ```
+- **Tests:** [`../tests/test_steel_dataset.py`](../tests/test_steel_dataset.py) checks the columns/units, row count, strictly-positive/finite values, sensible input ranges, determinism, validation, and that the committed CSV matches a fresh default generation byte-for-byte.
+- **Introducing author / copyright:** new Engineering ML Studio contribution; copyright in this new contribution held by **UKRI**.
+- **Licence:** Apache-2.0 (the project's licence); see the repository licence files.
+
 ---
 
 ## Recommended follow-up (optional)
