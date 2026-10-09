@@ -228,9 +228,9 @@ test.describe('Engineering ML Studio — Phase 1 landing + problem-led Explore',
     // Open the clearly-secondary "use a different example" control and switch.
     await page.locator('.explore-other-examples summary').click();
     const examples = page.locator('#exploreExampleSwitch input[name="exploreExample"]');
-    await expect(examples).toHaveCount(2);
+    await expect(examples).toHaveCount(5);
     await expect(examples.first()).toBeChecked();     // pipe is the default
-    await examples.nth(1).check();                     // generic nonlinear
+    await examples.nth(4).check();                     // generic nonlinear
     await expect(page.locator('#exploreProblem')).toContainText('mathematical');
     await page.click('#exploreToStage2');
     await page.click('#exploreToStage3');
@@ -238,6 +238,44 @@ test.describe('Engineering ML Studio — Phase 1 landing + problem-led Explore',
     await expect(page.locator('#exploreComparison tbody tr')).toHaveCount(1);
     await page.click('#exploreToStage4');
     await expect(page.locator('#exploreEngineering')).toContainText('Not an engineering dataset');
+  });
+  test('A4. Fin, steel and orifice examples load their correct problem descriptions and targets', async ({ page }) => {
+    await page.goto('/?localOnly=1');
+    await appReady(page);
+    await enterExplore(page);
+
+    const examples = [
+      {
+        key: 'fin',
+        description: 'predict heat dissipation',
+        target: 'Heat dissipation',
+        unit: 'W'
+      },
+      {
+        key: 'steel',
+        description: 'yield strength',
+        target: 'Yield strength',
+        unit: 'MPa'
+      },
+      {
+        key: 'orifice',
+        description: 'predict flow rate',
+        target: 'Flow rate',
+        unit: 'm³/s'
+      }
+    ];
+
+    await page.locator('.explore-other-examples summary').click();
+
+    for (const example of examples) {
+      await page.locator(
+        `#exploreExampleSwitch input[name="exploreExample"][value="${example.key}"]`
+      ).check();
+
+      await expect(page.locator('#exploreProblem')).toContainText(example.description);
+      await expect(page.locator('#exploreProblem .explore-target')).toContainText(example.target);
+      await expect(page.locator('#exploreProblem .explore-unit').last()).toContainText(example.unit);
+    }
   });
 
   test('17. no non-local requests occur during the Explore workflow', async ({ page }) => {

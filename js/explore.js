@@ -2,14 +2,13 @@
 // Copyright 2026 UK Research and Innovation (UKRI)
 // Engineering ML Studio — Explore mode controller (Phase 1 prototype).
 //
-// A guided, beginner-friendly, four-stage regression workflow built around a
-// concrete engineering problem — predicting the pressure drop of a fluid
-// flowing through a pipe:
+// A guided, beginner-friendly, four-stage regression workflow built around
+// concrete engineering and mathematical examples:
 //
-//   1. Understand the pressure-drop problem
+//   1. Understand the engineering or mathematical problem
 //   2. Choose an approach (simple trend → flexible relationship → compare)
 //   3. Train and compare predictions
-//   4. Interpret the engineering meaning
+//   4. Interpret the engineering meaning where applicable
 //
 // The journey starts from the engineering problem, not from model names. Model
 // names (Linear Regression, Decision Tree, Random Forest) are kept visible but
@@ -27,9 +26,9 @@
   'use strict';
 
   // --- Bundled examples (provenance documented & confirmed MIT-reusable). -------
-  // See examples/README.md. The primary, default example is the synthetic pipe
-  // pressure-drop dataset (a documented engineering demonstration). A generic
-  // nonlinear dataset is retained only as a secondary mathematical demonstration.
+  // See examples/README.md. The bundled examples include several synthetic engineering
+  // datasets plus a generic nonlinear mathematical demonstration. The pipe pressure-drop 
+  // dataset remains the primary, default example.
   var EXAMPLES = [
     {
       key: 'pipe',
@@ -67,6 +66,103 @@
         'engineering equation (Darcy–Weisbach) with a fixed random seed and a small amount of added noise. ' +
         'It is not experimental, validated or safety-grade data, and must not be used for real design.',
       schematic: true,
+      approxRows: 500
+    },
+    {
+      key: 'fin',
+      file: './examples/fin_heat_dissipation_sample.csv',
+      engineering: true,
+      title: 'Predict heat dissipation from a fin',
+      short: 'Heat dissipation from a fin',
+      target: 'heat_dissipation_w',
+      targetLabel: 'heat dissipation',
+      unit: 'W',
+      intro: 'A fin increases the surface area available for convective heat transfer. Here we predict heat dissipation from the convection coefficient, fin area and temperature difference.',
+      inputs: [
+        { name: 'h_w_m2k', label: 'Convection coefficient', unit: 'W/m²K' },
+        { name: 'area_m2', label: 'Fin area', unit: 'm²' },
+        { name: 'delta_t_k', label: 'Temperature difference', unit: 'K' }
+      ],
+      features: ['h_w_m2k', 'area_m2', 'delta_t_k'],
+      keyInputs: 'convection coefficient, fin area, temperature difference',
+      trendText: 'Heat dissipation generally increases when the convection coefficient, fin area or temperature difference increases.',
+      trends: [
+        { feature: 'h_w_m2k', label: 'convection coefficient', direction: 'increase' },
+        { feature: 'area_m2', label: 'fin area', direction: 'increase' },
+        { feature: 'delta_t_k', label: 'temperature difference', direction: 'increase' }
+      ],
+      rangeText: 'The dataset has 500 rows. Heat dissipation ranges from a few watts to roughly 20 kW across the sampled synthetic conditions.',
+      disclaimer: 'This is a <strong>synthetic demonstration dataset</strong>, generated from Newton’s law of cooling with a fixed random seed and a small amount of added noise. It is not experimental, validated or safety-grade data, and must not be used for real design.',
+      schematic: false,
+      approxRows: 500
+    },
+    {
+      key: 'steel',
+      file: './examples/steel_tensile_strength_sample.csv',
+      engineering: true,
+      title: 'Predict steel yield strength',
+      short: 'Steel yield strength',
+      target: 'yield_strength_mpa',
+      targetLabel: 'yield strength',
+      unit: 'MPa',
+      intro: 'Structural engineers need to understand how steel composition, grain size and processing conditions affect yield strength. This synthetic example explores how these factors relate to yielding, but it is not suitable for material selection or structural design.',
+      inputs: [
+        { name: 'carbon_wt_pct', label: 'Carbon content', unit: 'wt%' },
+        { name: 'manganese_wt_pct', label: 'Manganese content', unit: 'wt%' },
+        { name: 'silicon_wt_pct', label: 'Silicon content', unit: 'wt%' },
+        { name: 'grain_size_um', label: 'Grain size', unit: 'µm' },
+        { name: 'tempering_temperature_c', label: 'Tempering temperature', unit: '°C' },
+        { name: 'test_temperature_c', label: 'Test temperature', unit: '°C' }
+      ],
+      features: ['carbon_wt_pct', 'manganese_wt_pct', 'silicon_wt_pct', 'grain_size_um', 'tempering_temperature_c', 'test_temperature_c'],
+      keyInputs: 'carbon content, manganese content, silicon content, grain size, tempering temperature, test temperature',
+      trendText: 'Yield strength generally increases with carbon, manganese and silicon content, and decreases as grain size, tempering temperature or test temperature increases, according to this dataset’s simplified model.',
+      trends: [
+        { feature: 'carbon_wt_pct', label: 'carbon content', direction: 'increase' },
+        { feature: 'manganese_wt_pct', label: 'manganese content', direction: 'increase' },
+        { feature: 'silicon_wt_pct', label: 'silicon content', direction: 'increase' },
+        { feature: 'grain_size_um', label: 'grain size', direction: 'decrease' },
+        { feature: 'tempering_temperature_c', label: 'tempering temperature', direction: 'decrease' },
+        { feature: 'test_temperature_c', label: 'test temperature', direction: 'decrease' }
+      ],
+      rangeText: 'The dataset has 500 rows. Inputs cover carbon 0.02–0.12 wt%, manganese 0.30–1.60 wt%, silicon 0.05–0.50 wt%, grain size 5–50 µm, tempering temperature 200–650 °C and test temperature −20–100 °C. Yield strength is expressed in MPa.',
+      disclaimer: 'This is a <strong>synthetic demonstration dataset</strong>, generated from a simplified Hall–Petch and solid-solution strengthening relationship, with simplified temperature effects and added noise. It is not experimental, validated or safety-grade data, and predictions must not be used for real material selection, structural design or safety-critical qualification.',
+      schematic: false,
+      approxRows: 500
+    },
+    {
+      key: 'orifice',
+      file: './examples/orifice_flow_sample.csv',
+      engineering: true,
+      title: 'Predict flow rate through an orifice',
+      short: 'Orifice flow rate',
+      target: 'flow_rate_m3_s',
+      targetLabel: 'flow rate',
+      unit: 'm³/s',
+      intro: 'Flow through an orifice can be estimated from the pressure difference, orifice diameter, fluid density and discharge coefficient. Here we predict flow rate from these synthetic flow-measurement inputs.',
+      inputs: [
+        { name: 'pressure_difference_pa', label: 'Pressure difference', unit: 'Pa' },
+        { name: 'orifice_diameter_m', label: 'Orifice diameter', unit: 'm' },
+        { name: 'fluid_density_kg_m3', label: 'Fluid density', unit: 'kg/m³' },
+        { name: 'discharge_coefficient', label: 'Discharge coefficient', unit: '' }
+      ],
+      features: [
+        'pressure_difference_pa',
+        'orifice_diameter_m',
+        'fluid_density_kg_m3',
+        'discharge_coefficient'
+      ],
+      keyInputs: 'pressure difference, orifice diameter, fluid density, discharge coefficient',
+      trendText: 'Flow rate generally increases when pressure difference, orifice diameter or discharge coefficient increases, and decreases when fluid density increases.',
+      trends: [
+        { feature: 'pressure_difference_pa', label: 'pressure difference', direction: 'increase' },
+        { feature: 'orifice_diameter_m', label: 'orifice diameter', direction: 'increase' },
+        { feature: 'fluid_density_kg_m3', label: 'fluid density', direction: 'decrease' },
+        { feature: 'discharge_coefficient', label: 'discharge coefficient', direction: 'increase' }
+      ],
+      rangeText: 'The dataset has 500 rows of synthetic orifice-flow conditions. Flow rate is expressed in m³/s across the demonstrated pressure, diameter, density and discharge-coefficient ranges.',
+      disclaimer: 'This is a <strong>synthetic demonstration dataset</strong>, generated from a simplified orifice-flow relationship with a fixed random seed and a small amount of added noise. The discharge coefficient is an effective synthetic parameter for this dataset. It is not experimental, validated or safety-grade data, and must not be used for real flow-system design.',
+      schematic: false,
       approxRows: 500
     },
     {
@@ -829,7 +925,7 @@
       host.innerHTML = '<h3 class="explore-engineering-title">Engineering interpretation</h3>' +
         '<div class="explore-insight"><h3>Not an engineering dataset</h3>' +
         '<p>This example is a mathematical demonstration, so there are no physical trend checks. ' +
-        'Switch to the pressure-drop example to see engineering-specific interpretation.</p></div>';
+        'Switch to an engineering example to see engineering-specific interpretation.</p></div>';
       return;
     }
 
@@ -868,7 +964,7 @@
     cards.push({
       title: 'Are the predictions physically plausible?',
       level: negatives === 0 ? null : 'high',
-      html: '<p>Pressure drop cannot be negative. ' +
+      html: '<p>Predictions cannot be negative. ' +
         (negatives === 0
           ? 'None of the ' + res.counts.test + ' test predictions are negative, which is physically sensible.'
           : '<strong>' + negatives + '</strong> of the ' + res.counts.test + ' test predictions are negative, which is not physically possible and is a warning sign.') +
@@ -885,10 +981,10 @@
     cards.push({
       title: 'Is the model used inside its demonstrated range?',
       level: 'medium',
-      html: '<p>Every prediction here is made within the range of the synthetic training data (500 rows, all in ' +
-        'turbulent flow). Using the model outside that range — different fluids, geometries, laminar flow, or fittings ' +
-        'and bends — is extrapolation and can be unreliable. Machine learning does not replace engineering judgement or ' +
-        'the underlying physics; treat these results as a demonstration only.</p>'
+      html: '<p>Every prediction here is made within the range of the synthetic training data. ' +
+        'Using the model outside that range is extrapolation and can be unreliable. ' +
+        'Machine learning does not replace engineering judgement or the underlying physics; ' +
+        'treat these results as a demonstration only.</p>'
     });
 
     host.innerHTML = '<h3 class="explore-engineering-title">Engineering interpretation</h3>' +
