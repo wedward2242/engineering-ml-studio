@@ -232,6 +232,8 @@ test.describe('Engineering ML Studio — Phase 1 landing + problem-led Explore',
     await expect(examples.first()).toBeChecked();     // pipe is the default
     await examples.nth(4).check();                     // generic nonlinear
     await expect(page.locator('#exploreProblem')).toContainText('mathematical');
+    await expect(page.locator('#exploreProblem')).toContainText('harder, noisier prediction problem');
+    await expect(page.locator('#exploreProblem')).toContainText('cleaner, physics-based engineering examples');
     await page.click('#exploreToStage2');
     await page.click('#exploreToStage3');
     await page.click('#exploreTrainBtn');

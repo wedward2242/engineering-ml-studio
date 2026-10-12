@@ -174,10 +174,7 @@
       target: 'target',
       targetLabel: 'target',
       unit: '',
-      intro: 'This is a purely mathematical dataset in which the target varies non-linearly with a ' +
-        'few input variables. It is <strong>not an engineering dataset</strong>. It is included only to ' +
-        'show clearly why a simple linear model struggles with curved relationships, and why a more ' +
-        'flexible model can do better.',
+      intro: 'This synthetic mathematical example shows what a harder, noisier prediction problem can look like, in contrast to the cleaner, physics-based engineering examples. It explores how a simple linear model can struggle with curved relationships, while a more flexible model may capture them better. It is <strong>not an engineering dataset</strong> and its results have no physical interpretation.',
       inputs: [
         { name: 'x1', label: 'Input x1', unit: '' },
         { name: 'x2', label: 'Input x2', unit: '' },
@@ -190,8 +187,7 @@
       trendText: '',
       trends: [],
       rangeText: 'A synthetic mathematical dataset of a few hundred rows spanning two continuous inputs.',
-      disclaimer: 'This is a <strong>mathematical demonstration</strong>, not an engineering dataset. Use it to ' +
-        'understand model behaviour, not to draw any engineering conclusion.',
+      disclaimer: 'This is a <strong>synthetic mathematical demonstration</strong>, intended to illustrate model behaviour on a nonlinear, noisy relationship. Use it to compare modelling approaches, not to draw engineering conclusions or make real-world decisions.',
       schematic: false,
       approxRows: 360
     }
