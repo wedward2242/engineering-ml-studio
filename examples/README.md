@@ -9,9 +9,7 @@ The files fall into two groups:
 - **Inherited from Local Regression Studio** (`house_prices_sample.csv`,
   `nonlinear_regression_sample.csv`, `nonlinear_prediction_sample.csv`) — introduced by Yu Duan;
   reusable under the MIT licence (confirmed).
-- **New to Engineering ML Studio** (`pipe_pressure_drop_sample.csv`) — a documented, deterministic,
-  **synthetic physically-informed** dataset created for the problem-led Explore mode, with a committed
-  generator script. See [its own section](#pipe_pressure_drop_samplecsv-new-explore-mode-primary).
+- **New to Engineering ML Studio** (`pipe_pressure_drop_sample.csv`, `fin_heat_dissipation_sample.csv`, `steel_tensile_strength_sample.csv`, `orifice_flow_sample.csv`) — documented, deterministic, synthetic engineering datasets created for the problem-led Explore mode, each with a committed generator script. See the individual dataset sections below for details.
 
 > ✅ **Reuse status confirmed.** Yu Duan has confirmed that the **inherited** bundled example datasets
 > may be reused under the **MIT licence** (see [`../LICENSES.txt`](../LICENSES.txt)). They were
@@ -24,11 +22,27 @@ The files fall into two groups:
 > a clearly-labelled secondary "generic nonlinear" demonstration. `house_prices_sample.csv` has been
 > **removed from the Explore path** but the file is **retained** here (unchanged) for Project mode and
 > compatibility.
+## Dataset catalogue
+
+All datasets are intended for machine-learning practice and exploration. **Do not use these datasets for engineering design, safety-critical calculations, material certification, or real-world decisions.** Where a dataset's origin or generation method is uncertain, that uncertainty is stated explicitly.
+
+| Dataset | Purpose and governing relationship | Input ranges | Seed and generation details |
+|---|---|---|---|
+| `house_prices_sample.csv` | Demonstrates tabular regression using property features to predict house prices. Governing equation: **not documented**. | Observed numeric ranges: area 46.3–219.5 m²; bedrooms 1–6; age 0–191 years; target price £182,528.79–£963,444.57. These are observed values, not documented generator ranges. | Seed and generator: **not documented**. The data appears programmatically generated, but it is not confirmed to be entirely synthetic or independent of real market data. Training demonstration only; not for property valuation or other real-world decisions. |
+| `nonlinear_regression_sample.csv` | Demonstrates nonlinear regression. Exact generating function and noise model: **not documented**. | Observed numeric ranges: time 1–360; x1 −3.0–3.0; x2 −1.122292–1.122058; target 0.161784–4.507024. These are observed values, not documented generator ranges. | Seed and generator: **not documented**. Appears generated for demonstration; exact provenance remains unconfirmed. Training only; not for engineering design or real-world decisions. |
+| `nonlinear_prediction_sample.csv` | Companion dataset for demonstrating nonlinear prediction. Exact generating function and noise model: **not documented**. | Observed numeric ranges (not documented generator ranges): time 1–359; x1 −3.0–2.983287; x2 −1.046103–1.122058; target 0.161784–4.431533. | Seed and generator: **not documented**. Appears generated for demonstration; exact provenance remains unconfirmed. Training only; not for engineering design or real-world decisions. |
+| `pipe_pressure_drop_sample.csv` | Pipe-flow pressure drop using Darcy–Weisbach: \(\Delta p=f(L/D)(\rho v^2/2)\), with friction factor calculated using Reynolds number and the documented laminar/Haaland correlations. | Length 2–30 m; diameter 0.02–0.20 m; velocity 0.5–4.0 m/s; density 850–1050 kg/m³; dynamic viscosity \(3\times10^{-4}\)–\(2\times10^{-3}\) Pa·s. | Seed 42; 500 rows by default; multiplicative lognormal noise, \(\sigma=0.05\). Synthetic, physically informed training data only—not experimental or validated design data. |
+| `fin_heat_dissipation_sample.csv` | Convective heat dissipation using Newton's law of cooling: \(Q=hA\Delta T\). | Heat-transfer coefficient 5–500 W/(m²·K); area 0.001–0.5 m²; temperature difference 5–100 K. | Seed 42; 500 rows by default; multiplicative lognormal noise, \(\sigma=0.05\). Synthetic, physically informed training data only—not for thermal design. |
+| `steel_tensile_strength_sample.csv` | Synthetic yield-strength demonstration using Hall–Petch strengthening, approximate linear composition terms, and project-defined temperature corrections: \(\sigma_y=\sigma_0+kd^{-1/2}+a_C C+a_{Mn}Mn+a_{Si}Si-0.20(T_{\mathrm{temper}}-400)-0.20(T_{\mathrm{test}}-20)\). The temperature terms are project-defined, simplified effects, not universal material constants. | Carbon 0.02–0.12 wt%; manganese 0.30–1.60 wt%; silicon 0.05–0.50 wt%; grain size 5–50 µm; tempering temperature 200–650 °C; test temperature −20–100 °C. | Seed 42; 500 rows by default; multiplicative lognormal noise, \(\sigma=0.04\). Synthetic training data only—not for structural design, safety-critical use, or material certification. |
+| `orifice_flow_sample.csv` | Simplified orifice-flow relationship: \(Q=C_d A\sqrt{2\Delta p/\rho}\), where \(A=\pi d^2/4\). It does not reproduce the full ISO 5167 calculation. | Pressure difference 1,000–100,000 Pa; diameter 0.005–0.050 m; density 850–1050 kg/m³; discharge coefficient 0.60–0.65. | Seed 42; 500 rows by default; multiplicative lognormal noise, \(\sigma=0.05\). Synthetic training data only—not for real flow-system design. |
+
+For the engineering datasets, the ranges above describe the documented generator inputs. Seeds and noise settings are those documented in the corresponding generator sections. For the inherited datasets, undocumented generation details must be established from reliable provenance before being claimed as fact.
+
 
 ## Summary of provenance (inherited files)
 
-*(Applies to the three inherited files. The new `pipe_pressure_drop_sample.csv` has its own section
-below, with full generator documentation.)*
+*(Applies to the three inherited files. The four new engineering datasets have their own sections
+below, with generator documentation.)*
 
 - **[Confirmed]** All three inherited CSVs were introduced in commit **`11ae72e`** ("app body").
 - **[Confirmed]** Author of the introducing commit: **Yu Duan** — `MarLen <y.duan@imperial.ac.uk>`,
