@@ -23,7 +23,7 @@ import unittest
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.normpath(os.path.join(HERE, ".."))
-sys.path.insert(0, os.path.join(ROOT, "scripts"))
+sys.path.insert(0, ROOT)
 
 from scripts import generate_orifice_flow as gen
 
@@ -122,6 +122,13 @@ class OrificeDatasetGeneratorTests(unittest.TestCase):
         header, rows, _ = gen.generate(rows=100, seed=3)
         gen.validate(header, rows)  # must not raise
 
+    def test_validate_rejects_out_of_range_input(self):
+        header, rows, _ = gen.generate(rows=10, seed=42)
+        rows[0][0] = 100001.0
+
+        with self.assertRaises(AssertionError):
+            gen.validate(header, rows)
+
     def test_bundled_csv_matches_default_generation(self):
         """The committed example CSV is reproducible from the documented defaults."""
         self.assertTrue(os.path.exists(BUNDLED_CSV), "bundled example CSV is missing")
@@ -139,6 +146,29 @@ class OrificeDatasetGeneratorTests(unittest.TestCase):
             "examples/orifice_flow_sample.csv is out of date; "
             "rerun scripts/generate_orifice_flow.py",
         )
+
+    def test_invalid_rows_are_rejected(self):
+        for rows in (0, -1, True, 1.5):
+            with self.subTest(rows=rows):
+                with self.assertRaises(ValueError):
+                    gen.generate(rows=rows)
+
+    def test_invalid_seed_is_rejected(self):
+        for seed in (True, 1.5, "42"):
+            with self.subTest(seed=seed):
+                with self.assertRaises(ValueError):
+                    gen.generate(seed=seed)
+
+    def test_invalid_sigma_is_rejected(self):
+        for sigma in (-0.1, float("inf"), float("-inf"), float("nan"), True, "0.05"):
+            with self.subTest(sigma=sigma):
+                with self.assertRaises(ValueError):
+                    gen.generate(sigma=sigma)
+
+    def test_zero_sigma_is_accepted(self):
+        header, rows, _ = gen.generate(rows=10, seed=42, sigma=0)
+        self.assertEqual(len(rows), 10)
+        gen.validate(header, rows)
 
 
 def _is_finite(x):

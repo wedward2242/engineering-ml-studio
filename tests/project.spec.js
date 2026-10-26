@@ -35,7 +35,7 @@ const MODEL_VALUES = [
 
 async function ready(page) {
   await page.goto('/?localOnly=1');
-  await page.waitForFunction(() => !!(window.LocalRegressionApp && window.LocalRegressionApp.version));
+  await expect(page.locator('.top-nav')).toBeVisible();
 }
 
 async function enterProjectMode(page) {

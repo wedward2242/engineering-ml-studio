@@ -23,9 +23,9 @@ import unittest
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.normpath(os.path.join(HERE, ".."))
-sys.path.insert(0, os.path.join(ROOT, "scripts"))
+sys.path.insert(0, ROOT)
 
-import generate_fin_heat_dissipation as gen
+from scripts import generate_fin_heat_dissipation as gen
 
 BUNDLED_CSV = os.path.join(ROOT, "examples", "fin_heat_dissipation_sample.csv")
 
@@ -97,6 +97,61 @@ class FinDatasetGeneratorTests(unittest.TestCase):
     def test_validate_accepts_generated_data(self):
         header, rows, _ = gen.generate(rows=100, seed=3)
         gen.validate(header, rows)  # must not raise
+
+    def test_invalid_rows_are_rejected(self):
+        for rows in (0, -1, True, 1.5):
+            with self.subTest(rows=rows):
+                with self.assertRaises(ValueError):
+                    gen.generate(rows=rows)
+
+    def test_invalid_seeds_are_rejected(self):
+        for seed in (True, 1.5, "42"):
+            with self.subTest(seed=seed):
+                with self.assertRaises(ValueError):
+                    gen.generate(seed=seed)
+
+    def test_invalid_sigma_is_rejected(self):
+        for sigma in (-0.1, float("inf"), float("-inf"),
+                      float("nan"), True, "0.05"):
+            with self.subTest(sigma=sigma):
+                with self.assertRaises(ValueError):
+                    gen.generate(sigma=sigma)
+
+        # Zero noise is valid.
+        _, rows, _ = gen.generate(rows=10, seed=42, sigma=0.0)
+        self.assertEqual(len(rows), 10)
+
+    def test_validate_rejects_wrong_column_order(self):
+        header, rows, _ = gen.generate(rows=10, seed=3)
+        wrong_header = list(reversed(header))
+
+        with self.assertRaises(ValueError):
+            gen.validate(wrong_header, rows)
+
+    def test_validate_rejects_non_positive_heat_dissipation(self):
+        header, rows, _ = gen.generate(rows=10, seed=3)
+        invalid_rows = [list(row) for row in rows]
+        heat_index = header.index("heat_dissipation_w")
+        invalid_rows[0][heat_index] = 0.0
+
+        with self.assertRaises(ValueError):
+            gen.validate(header, invalid_rows)
+
+    def test_validate_rejects_ragged_rows(self):
+        header, rows, _ = gen.generate(rows=10, seed=3)
+        invalid_rows = [list(row) for row in rows]
+        invalid_rows[0] = invalid_rows[0][:-1]
+
+        with self.assertRaises(ValueError):
+            gen.validate(header, invalid_rows)
+
+    def test_validate_rejects_non_finite_values(self):
+        header, rows, _ = gen.generate(rows=10, seed=3)
+        invalid_rows = [list(row) for row in rows]
+        invalid_rows[0][0] = float("nan")
+
+        with self.assertRaises(ValueError):
+            gen.validate(header, invalid_rows)
 
     def test_bundled_csv_matches_default_generation(self):
         """The committed example CSV is reproducible from the documented defaults."""

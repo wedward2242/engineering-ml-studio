@@ -11,11 +11,15 @@ The files fall into two groups:
   reusable under the MIT licence (confirmed).
 - **New to Engineering ML Studio** (`pipe_pressure_drop_sample.csv`, `fin_heat_dissipation_sample.csv`, `steel_tensile_strength_sample.csv`, `orifice_flow_sample.csv`) — documented, deterministic, synthetic engineering datasets created for the problem-led Explore mode, each with a committed generator script. See the individual dataset sections below for details.
 
-> ✅ **Reuse status confirmed.** Yu Duan has confirmed that the **inherited** bundled example datasets
-> may be reused under the **MIT licence** (see [`../LICENSES.txt`](../LICENSES.txt)). They were
-> introduced by Yu Duan as part of the original Local Regression Studio work. The **new**
-> `pipe_pressure_drop_sample.csv` is released under the same MIT terms, with copyright in the new
-> contribution held by UKRI.
+> ✅ **Reuse status confirmed.** Yu Duan has confirmed that the **inherited**
+> bundled example datasets may be reused under the **MIT licence** (see
+> [`../LICENSES.txt`](../LICENSES.txt)). They were introduced by Yu Duan as part
+> of the original Local Regression Studio work.
+>
+> The new Engineering ML Studio datasets—`pipe_pressure_drop_sample.csv`,
+> `fin_heat_dissipation_sample.csv`, `steel_tensile_strength_sample.csv`, and
+> `orifice_flow_sample.csv`—are released under the project's Apache-2.0 licence,
+> with copyright in new contributions held by UKRI.
 
 > ℹ️ **Explore-mode change.** The beginner **Explore** mode is now problem-led and uses
 > `pipe_pressure_drop_sample.csv` as its primary example; `nonlinear_regression_sample.csv` is kept as
@@ -148,9 +152,11 @@ below, with generator documentation.)*
 - **Tests:** [`../tests/test_pipe_dataset.py`](../tests/test_pipe_dataset.py) checks the columns/units,
   row count, strictly-positive/finite values, sensible ranges, determinism, and that the committed CSV
   matches a fresh default generation byte-for-byte.
+
 - **Introducing author / copyright:** new Engineering ML Studio contribution (Wei Wang, STFC);
   copyright in this new contribution held by **UKRI**.
-- **Licence:** MIT (the project's existing terms; see [`../LICENSES.txt`](../LICENSES.txt)).
+
+- **Licence:** Apache-2.0 (the project's licence); see the repository licence files.
 
 ## `fin_heat_dissipation_sample.csv` (new — Explore mode)
 
@@ -200,7 +206,7 @@ below, with generator documentation.)*
 - **Introducing author / copyright:** new Engineering ML Studio contribution; copyright in this new
   contribution held by **UKRI**.
 
-- **Licence:** MIT (the project's existing terms; see [`../LICENSES.txt`](../LICENSES.txt)).
+- **Licence:** Apache-2.0 (the project's licence); see the repository licence files.
 
 ## `steel_tensile_strength_sample.csv` (new — Explore mode)
 
@@ -213,6 +219,11 @@ below, with generator documentation.)*
   `σ_y = σ_0 + k · d^(-1/2) + a_C · C + a_Mn · Mn + a_Si · Si`
   where grain size contributes nonlinearly through `d^(-1/2)`, while the composition terms are approximately linear.
 - **Coefficient sources:** `σ_0 = 53.9 MPa`, `a_Mn = 32.3 MPa/wt%`, and `a_Si = 83.2 MPa/wt%` are based on literature values used for simplified structural-steel strengthening relationships. The Pickering relationship gives a Hall–Petch coefficient of `17.4 MPa·√mm`, which is converted here to approximately `550.2 MPa·√µm` to match the grain-size unit used by the generator. The carbon coefficient (`a_C = 5000 MPa/wt%`) and the temperature coefficients are project-defined effective coefficients for this synthetic teaching dataset rather than universal literature material constants.
+- **Literature reference:** the generator documents the Pickering (1971)
+  reference and explains which coefficients are literature-based and which are
+  project-defined. See
+  [`../scripts/generate_steel_tensile_strength.py`](../scripts/generate_steel_tensile_strength.py)
+  for the full reference and coefficient details.
 - **Assumptions / simplifications:** grain size is treated as the effective microstructural variable relevant to yielding; carbon, manganese and silicon contributions are approximated as linear; tempering temperature and test temperature are represented using simplified empirical corrections. Phase composition, heat-treatment history, dislocation density, precipitation, texture, strain rate, and other metallurgical effects are not modelled explicitly.
 - **Sampling ranges:** carbon 0.02–0.12 wt% (uniform); manganese 0.30–1.60 wt% (uniform); silicon 0.05–0.50 wt% (uniform); grain size 5–50 µm (uniform); tempering temperature 200–650 °C (uniform); test temperature −20–100 °C (uniform).
 - **Noise model:** each yield-strength value is multiplied by `exp(N(0, σ))` with `σ = 0.04` (~4% relative scatter) — multiplicative lognormal noise, so values remain strictly positive.

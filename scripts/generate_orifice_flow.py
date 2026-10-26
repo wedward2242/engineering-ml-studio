@@ -148,6 +148,21 @@ def _sample_log_uniform(rng, low, high, n):
 
 def generate(rows: int = 500, seed: int = 42, sigma: float = 0.05):
     """Return (header, list-of-rows, diagnostics) for the synthetic dataset."""
+
+    if isinstance(rows, bool) or not isinstance(rows, int) or rows <= 0:
+        raise ValueError("rows must be a positive integer")
+
+    if isinstance(seed, bool) or not isinstance(seed, int):
+        raise ValueError("seed must be an integer")
+
+    if (
+        isinstance(sigma, bool)
+        or not isinstance(sigma, (int, float))
+        or not math.isfinite(sigma)
+        or sigma < 0
+    ):
+        raise ValueError("sigma must be finite and non-negative")
+
     rng = np.random.default_rng(seed)
 
     pressure_difference = _sample_uniform(
@@ -214,12 +229,15 @@ def validate(header, rows):
         for v in r:
             assert math.isfinite(v), "non-finite value"
 
+        for value, column in zip(r[:4], COLUMNS[:4]):
+            low, high = RANGES[column]
+            assert low <= value <= high, (
+                f"{column} outside allowed range"
+            )
         # Every input must be strictly positive.
         assert all(v > 0.0 for v in r[:4]), "non-positive input"
-
         # Flow rate must be strictly positive.
         assert r[flow_index] > 0.0, "non-positive flow rate"
-
 
 def write_csv(path, header, rows):
     os.makedirs(os.path.dirname(os.path.abspath(path)), exist_ok=True)

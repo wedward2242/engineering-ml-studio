@@ -68,8 +68,8 @@ Usage
 
 Licence
 -------
-Part of Engineering ML Studio; released under the project's existing MIT terms
-(see ../LICENSES.txt). Copyright in this new contribution is held by UKRI.
+Part of Engineering ML Studio; licensed under Apache-2.0
+(see ../LICENSE). Copyright in this new contribution is held by UKRI.
 """
 
 from __future__ import annotations

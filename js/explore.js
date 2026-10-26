@@ -25,7 +25,7 @@
 (function (global) {
   'use strict';
 
-  // --- Bundled examples (provenance documented & confirmed MIT-reusable). -------
+  // --- Bundled examples (provenance and reuse terms documented per dataset). -------
   // See examples/README.md. The bundled examples include several synthetic engineering
   // datasets plus a generic nonlinear mathematical demonstration. The pipe pressure-drop 
   // dataset remains the primary, default example.
@@ -552,6 +552,7 @@
   function train() {
     if (state.busy) return Promise.resolve();
     updateApproachControls();
+    resetResults();
     var types = modelsForApproach(state.approach);
     setBusy(true, 'Training locally…');
     return loadDataset(state.exampleKey).then(function (dataset) {
@@ -682,7 +683,7 @@
     var note = el('exploreLossNote');
     if (note) {
       note.textContent = t.earlyStopped
-        ? ('Training stopped early at epoch ' + t.bestEpoch + ' of a maximum of ' + t.maxEpochs +
+        ? ('Training stopped early at epoch ' + t.ranEpochs + ' of a maximum of ' + t.maxEpochs +
            ' because the validation loss stopped improving. A falling curve that flattens out is the sign of convergence.')
         : ('Training ran for the full ' + t.maxEpochs + ' epochs. If the curve is still falling at the right-hand edge, a longer training length may help; if it has flattened, the network has effectively converged.');
     }
@@ -739,10 +740,11 @@
 
     cards.push({
       title: 'How large are the errors? (Test RMSE ≈ ' + fmtU(testRmse) + ')',
-      body: 'RMSE is the typical size of the prediction error, in the units of ' + escapeHtml(target) +
+      body: 'RMSE summarises prediction error in the units of ' + escapeHtml(target) +
         (unit ? ' (' + escapeHtml(unit) + ')' : '') + '. ' +
-        'On average, predictions on the ' + res.counts.test + ' test rows are off by about ' + fmtU(testRmse) + '. ' +
-        'For comparison, the training error was about ' + fmtU(trainRmse) + '.'
+        'The test RMSE is about ' + fmtU(testRmse) + ' across ' + res.counts.test +
+        ' held-out test rows. For comparison, the training RMSE was about ' +
+        fmtU(trainRmse) + '.'
     });
 
     if (of) {
@@ -779,7 +781,7 @@
     if (t) {
       var convBody, convLevel = null;
       if (t.earlyStopped) {
-        convBody = 'Training stopped early at epoch ' + t.bestEpoch + ' of a maximum of ' + t.maxEpochs +
+        convBody = 'Training stopped early at epoch ' + t.ranEpochs + ' of a maximum of ' + t.maxEpochs +
           ' because the validation loss stopped improving. That is the expected, healthy outcome: the network ' +
           'settled rather than training needlessly.';
       } else {
@@ -934,14 +936,15 @@
       if (!q) return;
       var lowRow = Object.assign({}, base); lowRow[tr.feature] = q.low;
       var highRow = Object.assign({}, base); highRow[tr.feature] = q.high;
-      var preds = predictRaw(res, [lowRow, highRow]);
-      var delta = preds[1] - preds[0];
-      var observed = delta > 0 ? 'increase' : (delta < 0 ? 'decrease' : 'stay flat');
-      var matches = observed === tr.direction;
+      var preds = predictRaw(res, [lowRow, highRow]); var delta = preds[1] - preds[0];
+      var observedDirection = delta > 0  ? 'increase' : (delta < 0 ? 'decrease' : 'flat');
+      var observed = delta > 0 ? 'increases' : (delta < 0 ? 'decreases' : 'stays flat');
+      var matches = observedDirection === tr.direction;
       var verb = tr.direction === 'increase' ? 'increase' : 'decrease';
+
       trendItems.push('<li class="' + (matches ? 'trend-ok' : 'trend-warn') + '">' +
         'As <strong>' + escapeHtml(tr.label) + '</strong> increases, the predicted ' + escapeHtml(ex.targetLabel) +
-        ' <strong>' + observed + 's</strong> (by about ' + fmtU(Math.abs(delta)) + '). ' +
+        ' <strong>' + observed + '</strong> (by about ' + fmtU(Math.abs(delta)) + '). ' +
         (matches
           ? 'This matches the expected physical trend (it should ' + verb + ').'
           : 'This does <strong>not</strong> match the expected physical trend (it should ' + verb + ') — a warning sign for this model.') +
@@ -960,27 +963,29 @@
     cards.push({
       title: 'Are the predictions physically plausible?',
       level: negatives === 0 ? null : 'high',
-      html: '<p>Predictions cannot be negative. ' +
+      html: '<p>For this example, negative predictions are not physically plausible. ' +
         (negatives === 0
-          ? 'None of the ' + res.counts.test + ' test predictions are negative, which is physically sensible.'
-          : '<strong>' + negatives + '</strong> of the ' + res.counts.test + ' test predictions are negative, which is not physically possible and is a warning sign.') +
-        '</p>'
+         ? 'None of the ' + res.counts.test + ' test predictions are negative, which is consistent with the demonstrated conditions.'
+          : '<strong>' + negatives + '</strong> of the ' + res.counts.test + ' test predictions are negative, which is a warning sign.') +
+       '</p>'
     });
 
     cards.push({
       title: 'What does the error mean in practice?',
-      html: '<p>A typical prediction is off by about <strong>' + fmtU(res.testMetrics.rmse) + '</strong>. ' +
-        'Whether that is acceptable depends entirely on the engineering use: it may be fine for a rough sizing ' +
-        'estimate but far too large for a precise calculation.</p>'
+      html: '<p>The test RMSE is <strong>' + fmtU(res.testMetrics.rmse) +
+        '</strong>. It summarises prediction error in the target’s units. ' +
+        'Whether this error is acceptable depends on the engineering application and ' +
+        'requires appropriate validation; these synthetic examples are for demonstration only.</p>'
     });
 
     cards.push({
-      title: 'Is the model used inside its demonstrated range?',
-      level: 'medium',
-      html: '<p>Every prediction here is made within the range of the synthetic training data. ' +
-        'Using the model outside that range is extrapolation and can be unreliable. ' +
-        'Machine learning does not replace engineering judgement or the underlying physics; ' +
-        'treat these results as a demonstration only.</p>'
+    title: 'Is the model used inside its demonstrated range?',
+    level: 'medium',
+    html: '<p>The test predictions use held-out rows drawn from the bundled synthetic dataset. ' +
+      'The trend checks vary one input between the 10th and 90th percentiles of the training data ' +
+      'while holding the other inputs at typical values. Predictions for new inputs outside the ' +
+      'training data range are extrapolation and can be unreliable. Machine learning does not ' +
+      'replace engineering judgement or the underlying physics; treat these results as a demonstration only.</p>'
     });
 
     host.innerHTML = '<h3 class="explore-engineering-title">Engineering interpretation</h3>' +

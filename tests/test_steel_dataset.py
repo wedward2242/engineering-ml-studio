@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 # SPDX-License-Identifier: Apache-2.0
 # Copyright 2026 UK Research and Innovation (UKRI)
-"""These use only the Python standard library plus numpy (already required by the
+"""Tests for the synthetic steel tensile-strength dataset generator.
+These use only the Python standard library plus numpy (already required by the
 generator). Run with:
 
     python3 -m unittest tests.test_steel_dataset
@@ -21,7 +22,7 @@ import unittest
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.normpath(os.path.join(HERE, ".."))
-sys.path.insert(0, os.path.join(ROOT, "scripts"))
+sys.path.insert(0, ROOT)
 
 from scripts import generate_steel_tensile_strength as gen
 
@@ -68,7 +69,6 @@ class SteelDatasetGeneratorTests(unittest.TestCase):
             self.assertGreater(r[yield_index], 0.0)
 
             for v in r:
-                
                 self.assertTrue(_is_finite(v))
 
     def test_ranges_are_sensible(self):
@@ -120,6 +120,53 @@ class SteelDatasetGeneratorTests(unittest.TestCase):
     def test_validate_accepts_generated_data(self):
         header, rows, _ = gen.generate(rows=100, seed=3)
         gen.validate(header, rows)  # must not raise
+
+    def test_validate_rejects_input_outside_range(self):
+        header, rows, _ = gen.generate(rows=10, seed=3)
+        invalid_rows = [list(row) for row in rows]
+
+        carbon_index = header.index("carbon_wt_pct")
+        invalid_rows[0][carbon_index] = 0.0
+
+        with self.assertRaises(ValueError):
+            gen.validate(header, invalid_rows)
+
+    def test_validate_rejects_malformed_rows(self):
+        header, rows, _ = gen.generate(rows=10, seed=3)
+
+        ragged_rows = [list(row) for row in rows]
+        ragged_rows[0].pop()
+
+        with self.assertRaises(ValueError):
+            gen.validate(header, ragged_rows)
+
+        non_finite_rows = [list(row) for row in rows]
+        non_finite_rows[0][0] = float("nan")
+
+        with self.assertRaises(ValueError):
+            gen.validate(header, non_finite_rows)
+
+    def test_invalid_rows_are_rejected(self):
+        for rows in (0, -1, True, 1.5):
+            with self.subTest(rows=rows):
+                with self.assertRaises(ValueError):
+                    gen.generate(rows=rows)
+
+    def test_invalid_seeds_are_rejected(self):
+        for seed in (True, 1.5, "42"):
+            with self.subTest(seed=seed):
+                with self.assertRaises(ValueError):
+                    gen.generate(seed=seed)
+
+    def test_invalid_sigma_is_rejected(self):
+        for sigma in (-0.1, float("inf"), float("-inf"), float("nan"), True, "0.04"):
+            with self.subTest(sigma=sigma):
+                with self.assertRaises(ValueError):
+                    gen.generate(sigma=sigma)
+
+    def test_zero_sigma_is_accepted(self):
+        header, rows, _ = gen.generate(rows=10, seed=1, sigma=0.0)
+        gen.validate(header, rows)
 
     def test_bundled_csv_matches_default_generation(self):
         """The committed example CSV is reproducible from the documented defaults."""

@@ -50,8 +50,8 @@ Usage
 
 Licence
 -------
-Part of Engineering ML Studio; released under the project's existing MIT terms
-(see ../LICENSES.txt). Copyright in this new contribution is held by UKRI.
+Part of Engineering ML Studio; licensed under Apache-2.0
+(see ../LICENSE). Copyright in this new contribution is held by UKRI.
 """
 
 from __future__ import annotations
@@ -82,24 +82,26 @@ COLUMNS = [
 ]
 
 
-
-
-
-
-
-
-
-
 def _sample_uniform(rng, low, high, n):
     return rng.uniform(low, high, n)
 
-
-def _sample_log_uniform(rng, low, high, n):
-    return np.exp(rng.uniform(math.log(low), math.log(high), n))
-
-
 def generate(rows: int = 500, seed: int = 42, sigma: float = 0.05):
     """Return (header, list-of-rows, diagnostics) for the synthetic dataset."""
+
+    if not isinstance(rows, int) or isinstance(rows, bool) or rows <= 0:
+        raise ValueError("rows must be a positive integer")
+
+    if not isinstance(seed, int) or isinstance(seed, bool):
+        raise ValueError("seed must be an integer")
+
+    if (
+        isinstance(sigma, bool)
+        or not isinstance(sigma, (int, float))
+        or not math.isfinite(sigma)
+        or sigma < 0.0
+    ):
+        raise ValueError("sigma must be a finite, non-negative number")
+
     rng = np.random.default_rng(seed)
 
     h = _sample_uniform(rng, *RANGES["h_w_m2k"], rows)
@@ -138,24 +140,31 @@ def generate(rows: int = 500, seed: int = 42, sigma: float = 0.05):
 
 
 def validate(header, rows):
-    """Fail loudly if the dataset is not sensible."""
+    """Raise ValueError if the dataset is malformed or contains invalid values."""
 
-    assert header == COLUMNS, "unexpected column order"
+    if header != COLUMNS:
+        raise ValueError("unexpected column order")
 
-    assert rows, "no rows generated"
+    if not rows:
+        raise ValueError("no rows generated")
 
     heat_index = COLUMNS.index("heat_dissipation_w")
 
-    for r in rows:
-        assert len(r) == len(COLUMNS), "ragged row"
+    for row_number, row in enumerate(rows, start=2):
+        if len(row) != len(COLUMNS):
+            raise ValueError(f"ragged row at CSV line {row_number}")
 
-        assert r[heat_index] > 0.0, "non-positive heat dissipation"
+        for value in row:
+            if not math.isfinite(value):
+                raise ValueError(f"non-finite value at CSV line {row_number}")
 
-        # Every value must be strictly positive and finite.
-        for v in r:
-            assert math.isfinite(v), "non-finite value"
+            if value <= 0.0:
+                raise ValueError(f"non-positive value at CSV line {row_number}")
 
-        assert all(v > 0.0 for v in r), "non-positive input"
+        if row[heat_index] <= 0.0:
+            raise ValueError(
+                f"non-positive heat dissipation at CSV line {row_number}"
+            )
 
 def write_csv(path, header, rows):
     os.makedirs(os.path.dirname(os.path.abspath(path)), exist_ok=True)
