@@ -50,7 +50,16 @@ function results(page) {
   return page.evaluate(() => {
     const out = {};
     const r = window.EMSExplore.state.results;
-    Object.keys(r).forEach(k => { out[k] = { r2: r[k].testMetrics.r2, rmse: r[k].testMetrics.rmse }; });
+
+    Object.keys(r).forEach(k => {
+      out[k] = {
+        r2: r[k].testMetrics.r2,
+        rmse: r[k].testMetrics.rmse,
+        mae: r[k].testMetrics.mae,
+        trainRmse: r[k].trainMetrics.rmse
+      };
+    });
+
     return out;
   });
 }
@@ -197,15 +206,49 @@ test.describe('Engineering ML Studio — Phase 1 landing + problem-led Explore',
     await expect(page.locator('#explorePlot')).toContainText('kPa');
   });
 
-  test('14. stage 4 shows a plain-language interpretation with R² and RMSE in kPa', async ({ page }) => {
+  test('14. stage 4 explains R², RMSE, MAE and overfitting using actual model results', async ({ page }) => {
     await page.goto('/?localOnly=1');
     await appReady(page);
     await train(page, 'simple', 1);
     await page.click('#exploreToStage4');
+
     await expect(page.locator('#explore-stage-4')).toBeVisible();
-    await expect(page.locator('#exploreInterpretation .explore-insight').first()).toBeVisible();
-    await expect(page.locator('#exploreInterpretation')).toContainText('R²');
-    await expect(page.locator('#exploreInterpretation')).toContainText('kPa');
+
+    const interpretation = page.locator('#exploreInterpretation');
+    const cards = interpretation.locator('.explore-insight');
+
+    await expect(cards).toHaveCount(6);
+
+    const metrics = Object.values(await results(page))[0];
+
+    const r2Card = cards.filter({ hasText: 'How good is the fit?' });
+    const rmseCard = cards.filter({ hasText: 'How large are the typical errors?' });
+    const maeCard = cards.filter({ hasText: 'What is the average absolute error?' });
+    const overfitCard = cards.filter({ hasText: 'Is it overfitting?' });
+
+    await expect(r2Card).toContainText('R²');
+    await expect(rmseCard).toContainText('RMSE');
+    await expect(maeCard).toContainText('MAE');
+    await expect(overfitCard).toBeVisible();
+
+    await expect(r2Card).toContainText('variation');
+    await expect(rmseCard).toContainText('training RMSE');
+    await expect(maeCard).toContainText('average size');
+    await expect(overfitCard).toContainText('test RMSE');
+    await expect(overfitCard).toContainText('training RMSE');
+
+    const displayedText = await interpretation.textContent();
+
+    const formatted = value => {
+      const a = Math.abs(value);
+      return a >= 100 ? value.toFixed(1) : a >= 1 ? value.toFixed(2) : value.toFixed(4);
+    };
+
+    expect(displayedText).toContain(metrics.r2.toFixed(3));
+    expect(displayedText).toContain(formatted(metrics.rmse));
+    expect(displayedText).toContain(formatted(metrics.mae));
+    expect(displayedText).toContain(formatted(metrics.trainRmse));
+    expect(displayedText).toContain('kPa');
   });
 
   test('15. stage 4 gives an engineering interpretation with trend and extrapolation checks', async ({ page }) => {
@@ -241,6 +284,7 @@ test.describe('Engineering ML Studio — Phase 1 landing + problem-led Explore',
     await page.click('#exploreToStage4');
     await expect(page.locator('#exploreEngineering')).toContainText('Not an engineering dataset');
   });
+
   test('A4. Fin, steel and orifice examples load their correct problem descriptions and targets', async ({ page }) => {
     await page.goto('/?localOnly=1');
     await appReady(page);

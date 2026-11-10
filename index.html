@@ -725,6 +725,15 @@ jupyter lab notebooks/pipe_pressure_drop.ipynb</code></pre>
             <input id="showDiagnosticUncertainty" type="checkbox" checked>
             <span><strong>Show uncertainty intervals in plots</strong><small>This controls only the displayed uncertainty bands and error bars. It does not change the fitted model or uncertainty metrics.</small></span>
           </label>
+          <details class="prediction-interval-help" id="predictionIntervalHelp">
+            <summary>What does a prediction interval mean?</summary>
+            <p id="predictionIntervalHelpText">
+              A prediction interval gives a range of plausible values for an individual prediction.
+              For example, a 90% prediction interval is designed to contain the actual value
+              for approximately 90% of comparable future observations, under the method's
+              assumptions. A wider interval indicates greater predictive uncertainty.
+            </p>
+          </details>
         </div>
         <div class="charts-grid">
           <article class="chart-card"><div class="chart-title"><h3>Actual vs predicted</h3><button data-plot="actualPredicted" class="text-button export-plot" type="button">PNG</button></div><div id="plotActualPredicted" class="plot"></div></article>

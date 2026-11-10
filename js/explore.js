@@ -721,7 +721,10 @@
     var ex = exampleByKey(state.exampleKey);
     var target = ex.targetLabel;
     var unit = currentUnit();
-    var testR2 = res.testMetrics.r2, testRmse = res.testMetrics.rmse, trainRmse = res.trainMetrics.rmse;
+    var testR2 = res.testMetrics.r2;
+    var testRmse = res.testMetrics.rmse;
+    var testMae = res.testMetrics.mae;
+    var trainRmse = res.trainMetrics.rmse;
     var of = overfitVerdict(trainRmse, testRmse);
     var cards = [];
 
@@ -732,40 +735,67 @@
 
     cards.push({
       title: 'How good is the fit? (R² = ' + fmtR2(testR2) + ')',
-      body: 'R² measures how much of the variation in ' + escapeHtml(target) + ' the model explains on test data. ' +
-        (isFinite(testR2) && testR2 >= 0 ? ('Here it explains about ' + pct(testR2) + ', which is a ' + r2Quality(testR2) + ' fit.')
+      body: 'R² measures how much of the variation in ' + escapeHtml(target) +
+        ' the model explains on test data. ' +
+        (isFinite(testR2) && testR2 >= 0
+          ? ('Here it explains about ' + pct(testR2) + ', which is a ' + r2Quality(testR2) + ' fit.')
           : ('Here the fit is ' + r2Quality(testR2) + '.')) +
         ' A value of 1 is perfect; 0 means no better than predicting the average.'
     });
 
     cards.push({
-      title: 'How large are the errors? (Test RMSE ≈ ' + fmtU(testRmse) + ')',
-      body: 'RMSE summarises prediction error in the units of ' + escapeHtml(target) +
+      title: 'How large are the typical errors? (RMSE ≈ ' + fmtU(testRmse) + ')',
+      body: 'RMSE measures prediction error in the units of ' + escapeHtml(target) +
         (unit ? ' (' + escapeHtml(unit) + ')' : '') + '. ' +
-        'The test RMSE is about ' + fmtU(testRmse) + ' across ' + res.counts.test +
-        ' held-out test rows. For comparison, the training RMSE was about ' +
-        fmtU(trainRmse) + '.'
+        'For this model, the test RMSE is ' + fmtU(testRmse) +
+        '. This gives greater weight to larger errors because the errors are squared before averaging. ' +
+        'The training RMSE was ' + fmtU(trainRmse) + '.'
     });
-
-    if (of) {
-      cards.push({ title: 'Is it overfitting?', body: of.text, level: of.level });
-    }
-
-    if (modelType === 'ann') {
-      annInterpretationCards(res).forEach(function (c) { cards.push(c); });
-    }
 
     cards.push({
-      title: 'Reading the actual-vs-predicted plot',
-      body: 'Each point is one test row. The horizontal axis is the true ' + escapeHtml(target) +
-        (unit ? ' in ' + escapeHtml(unit) : '') + ' and the vertical axis is the model\'s prediction. ' +
-        'Points on the dashed diagonal are perfect predictions; points far above or below the line are larger errors. ' +
-        'A tight cloud along the diagonal means accurate predictions.'
+      title: 'What is the average absolute error? (MAE ≈ ' + fmtU(testMae) + ')',
+      body: 'MAE measures the average size of the prediction errors, ignoring whether predictions are too high or too low. ' +
+        'For this model, the average absolute error on the held-out test data is ' +
+        fmtU(testMae) + (unit ? ' ' + escapeHtml(unit) : '') +
+        '. Unlike RMSE, MAE does not give disproportionately greater weight to large errors.'
     });
+
+
+  if (of) {
+    var rmseGap = testRmse - trainRmse;
+
+    cards.push({
+      title: 'Is it overfitting?',
+      body: of.text +
+        ' In this result, the test RMSE is ' + fmtU(testRmse) +
+        ', compared with a training RMSE of ' + fmtU(trainRmse) +
+        '. The test error is ' + fmtU(Math.abs(rmseGap)) +
+        (rmseGap >= 0 ? ' higher' : ' lower') +
+        ' than the training error.',
+      level: of.level
+    });
+  }
+
+  if (modelType === 'ann') {
+    annInterpretationCards(res).forEach(function (c) { cards.push(c); });
+  }
+
+  cards.push({
+    title: 'Reading the actual-vs-predicted plot',
+    body: 'Each point is one test row. The horizontal axis is the true ' +
+    escapeHtml(target) + (unit ? ' in ' + escapeHtml(unit) : '') +
+    " and the vertical axis is the model's prediction. " +
+    'Points on the dashed diagonal are perfect predictions; points far above or below the line are larger errors. ' +
+    'A tight cloud along the diagonal means accurate predictions.'
+  });
 
     host.innerHTML = cards.map(function (c) {
       var cls = 'explore-insight' + (c.level ? ' level-' + c.level : '');
-      return '<div class="' + cls + '"><h3>' + c.title + '</h3><p>' + c.body + '</p></div>';
+
+      return '<details class="' + cls + '">' +
+        '<summary><strong>' + c.title + '</strong></summary>' +
+        '<p>' + c.body + '</p>' +
+        '</details>';
     }).join('');
   }
 

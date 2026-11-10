@@ -418,6 +418,34 @@ test.describe('Project mode — application shell (top bar, rail, workspace)', (
     await expect(page.locator('#metricsTable tbody tr').first()).toBeVisible();
     await expect(page.locator('#step-diagnostics')).not.toHaveClass(/locked/);
   });
+
+
+  test('30. prediction-interval guidance uses the selected diagnostic dataset', async ({ page }) => {
+    await fullWorkflow(page);
+
+    const help = page.locator('#predictionIntervalHelp');
+    const helpText = page.locator('#predictionIntervalHelpText');
+
+    await expect(help).toHaveCount(1);
+    await expect(help).toHaveJSProperty('open', false);
+
+    await help.locator('summary').click();
+    await expect(helpText).toContainText('prediction interval');
+    await expect(helpText).toContainText('predicted value');
+    await expect(helpText).toContainText('actual value');
+
+    const testExplanation = await helpText.textContent();
+
+    await page.selectOption('#diagnosticDataset', 'validation');
+
+    await expect.poll(() => helpText.textContent()).not.toBe(testExplanation);
+
+    const validationExplanation = await helpText.textContent();
+
+    await page.locator('#showDiagnosticUncertainty').uncheck();
+
+    await expect(helpText).toHaveText(validationExplanation);
+  });
 });
 
 test.describe('Project mode — responsive layout and accessibility', () => {

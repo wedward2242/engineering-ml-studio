@@ -1691,6 +1691,37 @@
     const intervalLabel = showIntervals
       ? `${Math.round(artifact.uncertainty.level*100)}% ${artifact.uncertainty.method}`
       : '';
+
+    const intervalHelp = $('predictionIntervalHelpText');
+
+    if (intervalHelp) {
+      const example = data.find(r =>
+        Number.isFinite(r.lower) &&
+        Number.isFinite(r.upper) &&
+        Number.isFinite(r.prediction) &&
+        Number.isFinite(r.actual)
+      );
+
+      if (example && artifact.uncertainty) {
+        const level = Math.round(artifact.uncertainty.level * 100);
+        const coverageText = example.covered === false
+          ? 'The actual value falls outside this interval.'
+          : 'The actual value falls inside this interval.';
+
+        intervalHelp.textContent =
+          `A ${level}% prediction interval, calculated using ${artifact.uncertainty.method}, ` +
+          'provides a range of plausible values for an individual prediction. ' +
+          `For example, this ${label.toLowerCase()} observation has a predicted value of ` +
+          `${formatMetric(example.prediction)}, with an interval from ` +
+          `${formatMetric(example.lower)} to ${formatMetric(example.upper)}. ` +
+          `Its actual value is ${formatMetric(example.actual)}. ${coverageText} ` +
+          'The stated percentage describes the intended coverage across comparable observations, ' +
+          'not a guarantee for an individual prediction.';
+      } else {
+        intervalHelp.textContent =
+          'Prediction intervals are not available for this fitted artifact.';
+      }
+    }
     const errorY = showIntervals ? { type:'data', symmetric:false, array:data.map(r=>r.upper-r.prediction), arrayminus:data.map(r=>r.prediction-r.lower), visible:true } : undefined;
     const min = Math.min(...actual,...predicted), max = Math.max(...actual,...predicted);
     Plotly.react('plotActualPredicted', [
