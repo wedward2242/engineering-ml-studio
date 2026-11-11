@@ -399,6 +399,10 @@
 
   function updateApproachControls() {
     state.approach = selectedApproach();
+    var overfitPanel = el('exploreOverfitDemo');
+    if (overfitPanel && state.approach !== 'compare') {
+      overfitPanel.classList.add('is-hidden');
+    }
     // Tree/forest controls are only relevant when a flexible tree-based model is involved.
     var usesTrees = state.approach === 'flexible' || state.approach === 'compare';
     // Neural-network preset controls appear for the advanced approach (and in compare).
@@ -569,6 +573,7 @@
       setBusy(false, '');
       state.focusModel = bestModel(types);
       renderComparison();
+      renderOverfitDemo();
       renderFocusSelector();
       renderPlot(state.focusModel);
       renderLossCurve(state.focusModel);
@@ -605,6 +610,141 @@
     table.innerHTML = '<thead><tr><th>Approach</th><th>Test RMSE' + unitSuffix + '</th>' +
       '<th>Test R²</th><th>Training RMSE' + unitSuffix + '</th></tr></thead><tbody>' + body + '</tbody>';
     if (wrap) wrap.classList.remove('is-hidden');
+  }
+  // B2: demonstrate how training and test performance can differ.
+  function renderOverfitDemo() {
+    var panel = el('exploreOverfitDemo');
+    if (!panel) return;
+
+    var tree = state.results.tree;
+    var forest = state.results.forest;
+
+    if (state.approach !== 'compare' || !tree || !forest ||
+        !global.Plotly || !tree.actual || !forest.actual ||
+        tree.actual.length !== forest.actual.length ||
+        tree.actual.some(function (value, index) {
+          return value !== forest.actual[index];
+        })) {
+      panel.classList.add('is-hidden');
+      return;
+    }
+
+    panel.classList.remove('is-hidden');
+
+    function renderModelPlot(modelType, result, plotId) {
+      var all = result.actual.concat(result.predicted)
+        .filter(function (value) { return isFinite(value); });
+
+      var min = Math.min.apply(null, all);
+      var max = Math.max.apply(null, all);
+
+      if (!isFinite(min) || !isFinite(max) || min === max) {
+        min -= 1;
+        max += 1;
+      }
+
+      var unit = currentUnit();
+      var target = exampleByKey(state.exampleKey).targetLabel +
+        (unit ? ' (' + unit + ')' : '');
+
+      global.Plotly.react(plotId, [
+        {
+          x: result.actual,
+          y: result.predicted,
+          mode: 'markers',
+          type: 'scatter',
+          name: 'Test observations',
+          marker: { color: '#125f76', size: 7, opacity: 0.75 },
+          hovertemplate: 'Actual %{x}<br>Predicted %{y}<extra></extra>'
+        },
+        {
+          x: [min, max],
+          y: [min, max],
+          mode: 'lines',
+          type: 'scatter',
+          name: 'Perfect prediction',
+          line: { dash: 'dash', color: '#a52b2b' },
+          hoverinfo: 'skip'
+        }
+      ], {
+        title: { text: MODEL_LABELS[modelType], font: { size: 14 } },
+        xaxis: { title: { text: 'Actual ' + target }, automargin: true },
+        yaxis: { title: { text: 'Predicted ' + target }, automargin: true },
+        margin: { l: 60, r: 15, t: 40, b: 55 },
+        paper_bgcolor: 'rgba(0,0,0,0)',
+        plot_bgcolor: 'rgba(0,0,0,0)'
+      }, {
+        responsive: true,
+        displaylogo: false,
+        modeBarButtonsToRemove: ['lasso2d', 'select2d']
+      });
+    }
+
+    renderModelPlot('tree', tree, 'exploreOverfitTreePlot');
+    renderModelPlot('forest', forest, 'exploreOverfitForestPlot');
+
+    var unitSuffix = currentUnit() ? ' ' + currentUnit() : '';
+
+    function metricsText(result) {
+      return 'Training RMSE: ' + fmt(result.trainMetrics.rmse) + unitSuffix +
+        '. Test RMSE: ' + fmt(result.testMetrics.rmse) + unitSuffix + '.';
+    }
+
+    el('exploreOverfitTreeMetrics').textContent = metricsText(tree);
+    el('exploreOverfitForestMetrics').textContent = metricsText(forest);
+
+    global.Plotly.react('exploreOverfitRmsePlot', [
+      {
+        x: ['Decision Tree', 'Random Forest'],
+        y: [tree.trainMetrics.rmse, forest.trainMetrics.rmse],
+        type: 'bar',
+        name: 'Training RMSE'
+      },
+      {
+        x: ['Decision Tree', 'Random Forest'],
+        y: [tree.testMetrics.rmse, forest.testMetrics.rmse],
+        type: 'bar',
+        name: 'Test RMSE'
+      }
+    ], {
+      title: { text: 'Training versus test RMSE', font: { size: 14 } },
+      xaxis: { title: { text: 'Model' }, automargin: true },
+      yaxis: {
+        title: { text: 'RMSE' + unitSuffix },
+        rangemode: 'tozero',
+        automargin: true
+      },
+      barmode: 'group',
+      margin: { l: 65, r: 20, t: 45, b: 55 },
+      legend: { orientation: 'h', y: -0.25 },
+      paper_bgcolor: 'rgba(0,0,0,0)',
+      plot_bgcolor: 'rgba(0,0,0,0)'
+    }, {
+      responsive: true,
+      displaylogo: false,
+      modeBarButtonsToRemove: ['lasso2d', 'select2d']
+    });
+
+    var treeGap = tree.testMetrics.rmse - tree.trainMetrics.rmse;
+    var forestGap = forest.testMetrics.rmse - forest.trainMetrics.rmse;
+    var explanation = '';
+
+    if (treeGap > 0 && treeGap > forestGap) {
+      explanation = 'The Decision Tree has a larger gap between training and test error. ' +
+        'This is evidence that it fits its training observations more closely than it ' +
+        'generalises to unseen observations. The Random Forest has a smaller gap ' +
+        'in this comparison.';
+    } else if (treeGap > 0 || forestGap > 0) {
+      explanation = 'At least one model has higher error on unseen test observations ' +
+        'than on its training observations. This difference is a generalisation gap. ' +
+        'Compare both gaps rather than assuming one model always overfits.';
+    } else {
+      explanation = 'Neither model has a higher test RMSE than training RMSE in this ' +
+        'run. This comparison does not show the usual pattern of overfitting. ' +
+        'Overfitting is a possible risk, not something to assume in advance.';
+    }
+
+    el('exploreOverfitExplanation').textContent = explanation;
   }
 
   // When comparing, let the user pick which approach's plot/explanation to view.
@@ -1051,6 +1191,8 @@
 
   function resetResults() {
     state.results = {};
+    var overfitPanel = el('exploreOverfitDemo');
+    if (overfitPanel) overfitPanel.classList.add('is-hidden');
     var wrap = el('exploreComparisonWrap'); if (wrap) wrap.classList.add('is-hidden');
     var focus = el('exploreFocusWrap'); if (focus) focus.classList.add('is-hidden');
     var card = el('explorePlotCard'); if (card) card.classList.add('is-hidden');

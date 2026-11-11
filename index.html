@@ -227,6 +227,41 @@
         <div class="table-wrap explore-results-table is-hidden" id="exploreComparisonWrap">
           <table id="exploreComparison"></table>
         </div>
+        <!-- B2: overfitting teaching demonstration -->
+        <section class="is-hidden" id="exploreOverfitDemo"
+          aria-labelledby="exploreOverfitHeading">
+          <div class="subpanel">
+            <h3 id="exploreOverfitHeading">
+              Understanding overfitting
+            </h3>
+
+            <p class="fine-print">
+              Both models are trained using the same dataset and evaluated
+              against the same unseen test observations. Compare how the
+              Decision Tree and Random Forest fit the data.
+            </p>
+
+            <div class="charts-grid">
+              <div class="chart-card">
+                <h3>Decision Tree</h3>
+                <div class="plot" id="exploreOverfitTreePlot"></div>
+                <p class="fine-print" id="exploreOverfitTreeMetrics"></p>
+              </div>
+
+              <div class="chart-card">
+                <h3>Random Forest</h3>
+                <div class="plot" id="exploreOverfitForestPlot"></div>
+                <p class="fine-print" id="exploreOverfitForestMetrics"></p>
+              </div>
+            </div>
+
+            <div class="chart-card">
+              <h3>Training error versus test error</h3>
+              <div class="plot" id="exploreOverfitRmsePlot"></div>
+              <p class="fine-print" id="exploreOverfitExplanation"></p>
+            </div>
+          </div>
+        </section>
         <label class="explore-focus is-hidden" id="exploreFocusWrap">Show predictions for
           <select id="exploreFocusModel"></select>
         </label>

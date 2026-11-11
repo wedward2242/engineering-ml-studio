@@ -173,6 +173,8 @@ test.describe('Engineering ML Studio — Phase 1 landing + problem-led Explore',
     await page.click('#exploreTrainBtn');
     await expect(page.locator('#exploreComparison tbody tr')).toHaveCount(1);
     await expect(page.locator('#exploreComparison')).toContainText('Random Forest');
+    // B2: the overfitting demonstration is only shown for Compare.
+    await expect(page.locator('#exploreOverfitDemo')).toBeHidden();
   });
 
   test('11. the flexible approach fits the nonlinear problem better than the simple trend', async ({ page }) => {
@@ -195,6 +197,17 @@ test.describe('Engineering ML Studio — Phase 1 landing + problem-led Explore',
     await expect(page.locator('#exploreComparison')).toContainText('Neural Network');
     await expect(page.locator('#exploreFocusWrap')).toBeVisible();
     await expect(page.locator('#exploreFocusModel option')).toHaveCount(4);
+    // B2: the overfitting demonstration compares both models on the same test rows.
+    const overfitDemo = page.locator('#exploreOverfitDemo');
+    await expect(overfitDemo).toBeVisible();
+    await expect(page.locator('#exploreOverfitTreeMetrics')).toContainText('Training RMSE:');
+    await expect(page.locator('#exploreOverfitTreeMetrics')).toContainText('Test RMSE:');
+    await expect(page.locator('#exploreOverfitForestMetrics')).toContainText('Training RMSE:');
+    await expect(page.locator('#exploreOverfitForestMetrics')).toContainText('Test RMSE:');
+    await expect(page.locator('#exploreOverfitTreePlot svg').first()).toBeVisible();
+    await expect(page.locator('#exploreOverfitForestPlot svg').first()).toBeVisible();
+    await expect(page.locator('#exploreOverfitRmsePlot svg').first()).toBeVisible();
+    await expect(page.locator('#exploreOverfitExplanation')).not.toBeEmpty();
   });
 
   test('13. an actual-vs-predicted plot is drawn with unit-labelled axes', async ({ page }) => {
