@@ -160,6 +160,96 @@ class NotebookExecutionTests(unittest.TestCase):
         # The section reports its training honestly (iteration count / convergence).
         self.assertIn("iterations", self.output_text, "NN should report its iteration count")
 
+STEEL_NOTEBOOK = os.path.join(ROOT, "notebooks", "steel_tensile_strength.ipynb")
+
+
+@unittest.skipIf(_MISSING, "notebook execution deps missing: " + ", ".join(_MISSING))
+class SteelNotebookExecutionTests(unittest.TestCase):
+    executed = None
+    output_text = ""
+
+    @classmethod
+    def setUpClass(cls):
+        nb = nbformat.read(STEEL_NOTEBOOK, as_version=4)
+        client = NotebookClient(
+            nb,
+            timeout=300,
+            kernel_name="python3",
+            resources={"metadata": {"path": NOTEBOOK_DIR}},
+        )
+        try:
+            cls.executed = client.execute()
+        except CellExecutionError as exc:
+            raise AssertionError(
+                f"steel notebook failed to execute top-to-bottom: {exc}"
+            )
+        cls.output_text = collect_stream_text(cls.executed)
+
+    def _test_r2(self, model_name):
+        match = re.search(
+            re.escape(model_name) + r"\s+(-?\d+\.\d+)\s+(-?\d+\.\d+)",
+            self.output_text,
+        )
+        self.assertIsNotNone(match, f"could not find test R2 for {model_name}")
+        return float(match.group(2))
+
+    def test_runs_offline_from_local_dataset(self):
+        self.assertIn(
+            "Loaded local dataset",
+            self.output_text,
+            "steel notebook should load the committed local CSV",
+        )
+
+    def test_no_execution_errors(self):
+        errors = [
+            out
+            for cell in self.executed.cells
+            if cell.get("cell_type") == "code"
+            for out in cell.get("outputs", [])
+            if out.get("output_type") == "error"
+        ]
+        self.assertEqual(errors, [], "steel notebook produced execution errors")
+
+    def test_model_metrics_are_sane(self):
+        linear = self._test_r2("Linear Regression")
+        tree = self._test_r2("Decision Tree")
+        forest = self._test_r2("Random Forest")
+
+        self.assertTrue(0.85 <= linear <= 1.0, f"linear test R2 out of range: {linear}")
+        self.assertTrue(0.65 <= tree <= 0.98, f"tree test R2 out of range: {tree}")
+        self.assertTrue(0.80 <= forest <= 1.0, f"forest test R2 out of range: {forest}")
+
+    def test_predictions_are_physically_plausible(self):
+        self.assertRegex(
+            self.output_text,
+            r"None of the \d+ test predictions are negative\. All are positive\.",
+            "expected all test predictions to be non-negative",
+        )
+
+    def test_all_six_engineering_trend_checks_pass(self):
+        self.assertGreaterEqual(
+            self.output_text.count("[OK"),
+            6,
+            "expected all six steel trend checks to pass",
+        )
+        self.assertNotIn("[WARN]", self.output_text)
+
+    def test_extrapolation_is_flagged(self):
+        self.assertRegex(
+            self.output_text,
+            r"(?:In|Inside) demonstrated range\?\s*False",
+            "the out-of-range grain-size example should be flagged",
+        )
+
+    def test_optional_neural_network_runs_and_reports_training(self):
+        nn = self._test_r2("Neural Network")
+        self.assertTrue(0.85 <= nn <= 1.0, f"NN test R2 out of range: {nn}")
+        self.assertIn(
+            "iterations",
+            self.output_text,
+            "NN should report its training iteration count",
+        )
+
 
 if __name__ == "__main__":
     unittest.main()

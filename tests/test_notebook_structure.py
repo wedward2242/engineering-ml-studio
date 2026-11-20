@@ -169,5 +169,131 @@ class NotebookStructureTests(unittest.TestCase):
             self.assertNotIn(banned, code, f"notebook must not require '{banned}'")
 
 
+STEEL_NOTEBOOK = os.path.join(ROOT, "notebooks", "steel_tensile_strength.ipynb")
+
+
+def load_steel_notebook():
+    with open(STEEL_NOTEBOOK, encoding="utf-8") as handle:
+        return json.load(handle)
+
+
+class SteelNotebookStructureTests(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        cls.nb = load_steel_notebook()
+
+    def test_notebook_file_exists_and_is_valid_v4(self):
+        self.assertTrue(os.path.exists(STEEL_NOTEBOOK))
+        self.assertEqual(self.nb.get("nbformat"), 4)
+        self.assertIsInstance(self.nb.get("cells"), list)
+        self.assertEqual(len(self.nb["cells"]), 44)
+
+    def test_committed_without_outputs(self):
+        for cell in cells_of_type(self.nb, "code"):
+            self.assertEqual(cell.get("outputs", []), [])
+            self.assertIsNone(cell.get("execution_count"))
+
+    def test_has_all_sixteen_sections(self):
+        markdown = all_source(self.nb, "markdown")
+        for n in range(1, 17):
+            self.assertIn(f"## {n}.", markdown)
+
+    def test_fixed_seed_present(self):
+        code = all_source(self.nb, "code")
+        self.assertIn("SEED = 42", code)
+        self.assertIn("random_state=SEED", code)
+
+    def test_correct_steel_features_and_target(self):
+        code = all_source(self.nb, "code")
+        for feature in (
+            "carbon_wt_pct",
+            "manganese_wt_pct",
+            "silicon_wt_pct",
+            "grain_size_um",
+            "tempering_temperature_c",
+            "test_temperature_c",
+        ):
+            self.assertIn(feature, code, f"missing input feature: {feature}")
+        self.assertIn("yield_strength_mpa", code)
+        self.assertNotIn("pressure_drop_kpa", code)
+
+    def test_steel_units_and_hall_petch_explanation(self):
+        text = all_source(self.nb)
+        for term in ("MPa", "wt%", "micrometres", "degrees C", "Hall-Petch"):
+            self.assertIn(term, text)
+        self.assertIn("550.2", text)
+        self.assertIn("grain_size_um", text)
+
+    def test_all_three_models_and_metrics_present(self):
+        text = all_source(self.nb)
+        code = all_source(self.nb, "code")
+        for name in ("Linear Regression", "Decision Tree", "Random Forest"):
+            self.assertIn(name, text)
+        for model in (
+            "LinearRegression",
+            "DecisionTreeRegressor",
+            "RandomForestRegressor",
+        ):
+            self.assertIn(model, code)
+        self.assertIn("r2_score", code)
+        self.assertIn("mean_squared_error", code)
+
+    def test_synthetic_data_and_safety_disclaimer(self):
+        text = all_source(self.nb, "markdown").lower()
+        self.assertIn("synthetic", text)
+        for term in (
+            "material selection",
+            "structural design",
+            "safety-critical qualification",
+            "certification",
+            "engineering decisions",
+        ):
+            self.assertIn(term, text)
+
+    def test_extrapolation_warning_present(self):
+        self.assertIn("extrapolat", all_source(self.nb).lower())
+
+    def test_offline_first_data_loader_with_fallback(self):
+        code = all_source(self.nb, "code")
+        self.assertIn("os.path.exists", code)
+        self.assertIn(
+            "raw.githubusercontent.com/weiwangstfc/engineering-ml-studio",
+            code,
+        )
+        self.assertIn("steel_tensile_strength_sample.csv", code)
+
+    def test_attribution_preserved(self):
+        text = all_source(self.nb, "markdown")
+        self.assertIn("Yu Duan", text)
+        self.assertIn("UKRI", text)
+
+    def test_optional_advanced_neural_network_section(self):
+        markdown = all_source(self.nb, "markdown").lower()
+        code = all_source(self.nb, "code")
+        self.assertIn("neural network", markdown)
+        self.assertIn("optional", markdown)
+        self.assertIn("advanced", markdown)
+        self.assertIn("MLPRegressor", code)
+        self.assertIn("hidden_layer_sizes=(32, 16)", code)
+        self.assertIn("StandardScaler", code)
+        self.assertIn("early_stopping=True", code)
+        self.assertIn("loss_curve_", code)
+
+    def test_no_pytorch_or_tensorflow_dependency(self):
+        code = all_source(self.nb, "code")
+        for banned in (
+            "import torch",
+            "import tensorflow",
+            "from torch",
+            "from tensorflow",
+        ):
+            self.assertNotIn(banned, code)
+
+    def test_no_em_dash_or_reintroduced_pipe_content(self):
+        text = all_source(self.nb)
+        self.assertNotIn("\u2014", text)
+        self.assertNotIn("pipe_length_m", text)
+        self.assertNotIn("pressure_drop_kpa", text)
+
 if __name__ == "__main__":
     unittest.main()
