@@ -58,6 +58,25 @@ npm run serve      # same as: python3 -m http.server 8000
 Any static file server works (e.g. `npx http-server`, `php -S`); Python is used here only because
 it is universally available and requires no installation.
 
+## Recommended classroom setting
+
+For teaching sessions where internet access is unreliable or unavailable, use the local-only URL:
+
+```text
+http://127.0.0.1:8000/?localOnly=1
+```
+
+Before the session:
+
+1. Ensure the repository and its bundled `vendor/` libraries are available on each computer.
+2. Start the application locally from the repository root using `python3 -m http.server 8000` or `npm run serve`.
+3. Open the local-only URL in the browser.
+4. Check that the runtime status displays **Offline mode** and that the bundled libraries are loaded locally.
+
+The application is served from the computer itself, so an external internet connection is not required once the repository is available locally. Keep the local server running for the duration of the session.
+
+The `localOnly=1` setting prevents the application from attempting to load its supported libraries from a CDN. It does not download or install the application for students.
+
 ## Local-only data handling (confirmed)
 
 All processing happens in your browser. When the app is opened with `?localOnly=1`, it loads only
