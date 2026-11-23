@@ -345,19 +345,64 @@
         '<small>' + tag + '</small></span></label>';
     }).join('');
     host.querySelectorAll('input[name="exploreExample"]').forEach(function (input) {
-      input.addEventListener('change', function () { selectExample(input.value); });
+      // Manual selections create history entries so Back and Forward can restore them.
+      input.addEventListener('change', function () {
+        selectExample(input.value, { updateHistory: true });
+      });
     });
   }
 
-  function selectExample(key) {
+  function selectExample(key, options) {
+    options = options || {};
+
+    // Reject unsupported keys rather than allowing an invalid example into state.
+    if (!EXAMPLES.some(function (ex) { return ex.key === key; })) return;
+
     if (state.exampleKey !== key) {
       state.exampleKey = key;
       state.dataset = null;
       resetResults();
       renderProblem();
     }
+
+    // Only manual selections create history entries. URL restoration must not
+    // create another entry, otherwise Back and Forward could become trapped.
+    if (options.updateHistory && global.location && global.history) {
+      var nextHash = '#explore/' + key;
+      if (global.location.hash !== nextHash) {
+        global.history.pushState(null, '', nextHash);
+      }
+    }
+
     // Preload in the background so training feels instant; ignore failures here.
     loadDataset(key).catch(function () {});
+  }
+
+  // Read a supported Explore example from the current URL.
+  // Return null for ordinary routes such as #explore or unrelated routes.
+  function exampleKeyFromHash() {
+    var match = /^#explore\/([^/]+)$/.exec(global.location.hash || '');
+    if (!match) return null;
+
+    var key = match[1];
+    return EXAMPLES.some(function (ex) { return ex.key === key; }) ? key : null;
+  }
+
+  // Apply a URL selection without creating another browser history entry.
+  function applyExampleFromHash() {
+    var key = exampleKeyFromHash();
+
+    // Restore an explicitly requested example from a deep link.
+    if (key) {
+      selectExample(key);
+      return;
+    }
+
+    // Plain #explore always means the default Pipe example, including
+    // when the browser returns to it using Back or Forward.
+    if (global.location.hash === '#explore') {
+      selectExample('pipe');
+    }
   }
 
   function loadDataset(key) {
@@ -1367,6 +1412,14 @@
   // Initialise once the DOM is ready; (re)ensure wiring when Explore is first shown.
   function init() {
     wire();
+
+    // Apply a deep link after wiring because the router loads before this module.
+    applyExampleFromHash();
+
+    // Browser history traversal must restore the example as well as the view.
+    global.addEventListener('popstate', applyExampleFromHash);
+    global.addEventListener('hashchange', applyExampleFromHash);
+
     document.addEventListener('ems:modechange', function (event) {
       if (event.detail && event.detail.mode === 'explore') wire();
     });

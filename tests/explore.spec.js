@@ -337,6 +337,74 @@ test.describe('Engineering ML Studio — Phase 1 landing + problem-led Explore',
     }
   });
 
+  // E1: Direct links must open the requested Explore activity, not just the Explore view.
+  test('E1. direct links open every supported Explore example', async ({ page }) => {
+    const examples = ['pipe', 'fin', 'steel', 'orifice', 'nonlinear'];
+
+    for (const example of examples) {
+      // A fresh navigation verifies the route during initial application startup.
+      await page.goto(`/?localOnly=1#explore/${example}`);
+      await appReady(page);
+
+      await expect(page.locator('#view-explore')).toBeVisible();
+      await expect(
+        page.locator(`#exploreExampleSwitch input[value="${example}"]`)
+      ).toBeChecked();
+    }
+  });
+
+  // E1: The original Explore route must retain pipe as its default activity.
+  test('E1. the plain Explore route selects the default pipe example', async ({ page }) => {
+    await page.goto('/?localOnly=1#explore');
+    await appReady(page);
+
+    await expect(page.locator('#view-explore')).toBeVisible();
+    await expect(
+      page.locator('#exploreExampleSwitch input[value="pipe"]')
+    ).toBeChecked();
+  });
+
+  // E1: Unsupported nested routes must not silently display the default example.
+  test('E1. an unknown Explore example route falls back to Home', async ({ page }) => {
+    await page.goto('/?localOnly=1#explore/unknown');
+    await appReady(page);
+
+    await expect(page.locator('#view-home')).toBeVisible();
+  });
+
+  // E1: Changing examples must create navigable history entries.
+  test('E1. browser back and forward restore the previously selected examples', async ({ page }) => {
+    await page.goto('/?localOnly=1#explore');
+    await appReady(page);
+
+    await expect(page.locator('#exploreExampleSwitch input[value="pipe"]')).toBeChecked();
+
+    // Confirm the Explore view is visible before testing example navigation.
+    await expect(page.locator('#view-explore')).toBeVisible();
+    // Open the secondary example selector before interacting with its radio buttons.
+    await page.locator('.explore-other-examples summary').click();
+    // Select two activities so the browser has distinct example routes to revisit.
+    await page.locator('#exploreExampleSwitch input[value="fin"]').check();
+    await expect(page).toHaveURL(/#explore\/fin$/);
+
+    await page.locator('#exploreExampleSwitch input[value="steel"]').check();
+    await expect(page).toHaveURL(/#explore\/steel$/);
+
+    // Back should restore fin, then pipe.
+    await page.goBack();
+    await expect(page.locator('#exploreExampleSwitch input[value="fin"]')).toBeChecked();
+
+    await page.goBack();
+    await expect(page.locator('#exploreExampleSwitch input[value="pipe"]')).toBeChecked();
+
+    // Forward should restore the same selections in the same order.
+    await page.goForward();
+    await expect(page.locator('#exploreExampleSwitch input[value="fin"]')).toBeChecked();
+
+    await page.goForward();
+    await expect(page.locator('#exploreExampleSwitch input[value="steel"]')).toBeChecked();
+  });
+
   test('17. no non-local requests occur during the Explore workflow', async ({ page }) => {
     const { externalRequests } = instrument(page);
     await page.goto('/?localOnly=1');

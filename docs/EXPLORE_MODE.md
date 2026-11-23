@@ -211,6 +211,23 @@ never mutates Project state.
 | `scripts/generate_pipe_pressure_drop.py` | Documented, deterministic generator for the synthetic pressure-drop dataset. |
 | `examples/pipe_pressure_drop_sample.csv` | The bundled synthetic dataset (500 rows, seed 42). |
 
+## Shareable Explore links
+
+Explore supports direct links to each of its five activities. These links open the Explore view with the requested example selected:
+
+| URL hash | Activity |
+| --- | --- |
+| `#explore` | Opens Explore with Pipe selected by default. |
+| `#explore/pipe` | Pipe pressure drop |
+| `#explore/fin` | Fin heat dissipation |
+| `#explore/steel` | Steel strength |
+| `#explore/orifice` | Orifice flow |
+| `#explore/nonlinear` | Nonlinear demonstration |
+
+Selecting a different example updates the URL and creates a browser history entry. The browser Back and Forward controls restore the previously selected examples. Unsupported or malformed routes, such as `#explore/unknown`, fall back to Home.
+
+These links make it possible to share a specific Explore activity with another user without requiring them to navigate through the example selector.
+
 ## Accessibility and responsiveness
 
 Semantic HTML (`nav`, `section`, `ol`, headings, `label`led controls), a skip link, keyboard-operable
