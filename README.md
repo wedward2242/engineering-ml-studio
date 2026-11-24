@@ -67,6 +67,8 @@ Two things the licence does **not** cover, and which are held separately:
   material produced for courses run on this platform are **not** part of this repository and are
   **not** covered by this licence.
 
+For guidance on deciding where new resources belong, see [Course Materials and Repository Boundary](docs/COURSE_MATERIALS.md).
+
 The inherited Local Regression Studio code remains under its original permissive terms
 ([`LICENSES.txt`](LICENSES.txt)), which permit sublicensing; those notices are retained unchanged.
 See [`NOTICE`](NOTICE) for the short-form attribution required in redistributions, and
