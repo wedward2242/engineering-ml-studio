@@ -319,6 +319,8 @@
 
     var schematic = ex.schematic ? '<div class="explore-schematic-wrap">' + PIPE_SCHEMATIC + '</div>' : '';
 
+    syncExampleCopy(ex);
+
     host.innerHTML =
       '<p class="explore-problem-intro">' + ex.intro + '</p>' +
       schematic +
@@ -337,6 +339,32 @@
       '<div class="warning-box explore-disclaimer">' + ex.disclaimer + '</div>';
 
     renderExampleSwitch();
+  }
+
+  // The Explore shell (page heading, stage headings, approach and stage guidance)
+  // was written when pipe pressure drop was the only example. Keep every
+  // example-specific phrase in step with the selected example, so steel never
+  // shows a pipe heading or kPa. textContent only: titles and labels are plain.
+  function syncExampleCopy(ex) {
+    var heading = el('exploreHeading');
+    if (heading) heading.textContent = ex.title;
+    var stageHeading = el('exploreStage1Heading');
+    if (stageHeading) stageHeading.textContent = 'Understand the problem: ' + ex.short.toLowerCase();
+    var kind = el('exploreEyebrowKind');
+    if (kind) kind.textContent = ex.engineering ? 'Guided engineering example' : 'Guided mathematical example';
+
+    var copy = {
+      target: ex.targetLabel,
+      unitPhrase: ex.unit ? 'the target’s own units (' + ex.unit + ')' : 'the target’s original scale',
+      unitSuffix: ex.unit ? ', in ' + ex.unit : '',
+      stage4Look: ex.engineering
+        ? 'sensible physical trends, errors in ' + (ex.unit || 'the target’s units') + ', and honest limits'
+        : 'how the errors compare between approaches, and honest limits'
+    };
+    document.querySelectorAll('#view-explore [data-ex-copy]').forEach(function (node) {
+      var key = node.getAttribute('data-ex-copy');
+      if (Object.prototype.hasOwnProperty.call(copy, key)) node.textContent = copy[key];
+    });
   }
 
   // A clearly-secondary switch so the pipe problem stays the default focus.

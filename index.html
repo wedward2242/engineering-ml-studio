@@ -83,7 +83,7 @@
   <section id="view-explore" class="view is-hidden" aria-labelledby="exploreHeading" tabindex="-1">
     <div class="explore-shell">
       <header class="explore-header">
-        <p class="eyebrow">Guided engineering example &middot; Explore mode</p>
+        <p class="eyebrow"><span id="exploreEyebrowKind">Guided engineering example</span> &middot; Explore mode</p>
         <h1 id="exploreHeading">Predict pressure drop in a pipe</h1>
         <ol class="explore-steps" id="exploreSteps" aria-label="Explore progress">
           <li data-stage="1" class="is-current"><span>1</span> Understand the problem</li>
@@ -95,7 +95,7 @@
 
       <!-- Stage 1: understand the problem -->
       <section class="explore-stage" id="explore-stage-1" aria-labelledby="exploreStage1Heading">
-        <h2 id="exploreStage1Heading" class="explore-stage-title">Understand the pressure-drop problem</h2>
+        <h2 id="exploreStage1Heading" class="explore-stage-title">Understand the problem: pressure drop in a pipe</h2>
         <div class="info-box">
           <strong>What you are doing:</strong> getting to know the engineering problem before modelling it.
           <strong>Why it matters:</strong> knowing the inputs, the target and the expected physical trends helps you judge whether a model is sensible.
@@ -104,8 +104,9 @@
         <div id="exploreProblem" class="explore-problem"><!-- problem description injected by explore.js --></div>
         <details class="explore-other-examples">
           <summary>Use a different example</summary>
-          <p class="fine-print">The pressure-drop problem is the main engineering example. A generic
-            nonlinear dataset is also available purely as a mathematical demonstration.</p>
+          <p class="fine-print">Pipe pressure drop is the default example. The others cover heat transfer,
+            mechanics and a second fluids problem, plus a generic nonlinear dataset included as a
+            mathematical contrast case.</p>
           <div id="exploreExampleSwitch" class="explore-switch"><!-- example switch injected by explore.js --></div>
         </details>
         <div class="explore-nav">
@@ -125,7 +126,7 @@
         <div class="model-grid explore-approach-grid" role="radiogroup" aria-label="Modelling approach">
           <label class="model-card"><input type="radio" name="exploreApproach" value="simple" checked>
             <span><strong>Start with a simple trend</strong>
-              <small>Fits a single, easy-to-read weighted relationship between the inputs and the pressure drop.</small>
+              <small>Fits a single, easy-to-read weighted relationship between the inputs and the <span data-ex-copy="target">pressure drop</span>.</small>
               <small class="explore-model-name">Uses Linear Regression</small>
             </span></label>
           <label class="model-card"><input type="radio" name="exploreApproach" value="flexible">
@@ -144,9 +145,9 @@
               <small class="explore-model-name">Linear Regression, Decision Tree, Random Forest and Neural Network</small>
             </span></label>
         </div>
-        <p class="fine-print explore-approach-note">The simple trend is a good starting point. Pressure
-          drop depends on the inputs in a curved, nonlinear way, so a more flexible relationship often
-          fits it better. The trade-off is that a very flexible model can <em>overfit</em> — following
+        <p class="fine-print explore-approach-note">The simple trend is a good starting point. Many
+          engineering quantities depend on their inputs in a curved, nonlinear way, so a more flexible
+          relationship often fits better. The trade-off is that a very flexible model can <em>overfit</em> — following
           the training data too closely and generalising worse to new conditions.
           <strong>A more complex model is not automatically more accurate or more suitable for
           engineering use.</strong> On small tabular datasets like this one, a neural network may not
@@ -194,8 +195,8 @@
                 stop earlier automatically once it stops improving.</small>
             </label>
             <p class="fine-print explore-ann-scaling">The inputs are automatically put on a common scale
-              before training (the network needs this), and predictions are converted back to kPa, so the
-              errors and charts stay in real pressure units. You do not need to configure any of this.</p>
+              before training (the network needs this), and predictions are converted back to
+              <span data-ex-copy="unitPhrase">the target’s own units (kPa)</span>, so the errors and charts stay in real units. You do not need to configure any of this.</p>
             <details class="explore-ann-advanced">
               <summary>Advanced setting</summary>
               <label id="exploreAnnLearningRateField">Learning rate
@@ -217,8 +218,8 @@
         <h2 id="exploreStage3Heading" class="explore-stage-title">Train and compare predictions</h2>
         <div class="info-box">
           <strong>What you are doing:</strong> fitting the chosen approach on training data and checking it on held-back test data.
-          <strong>Why it matters:</strong> test performance shows how well it predicts pressure drop for unseen conditions.
-          <strong>What to look for:</strong> a lower prediction error (RMSE, in kPa) and points near the diagonal.
+          <strong>Why it matters:</strong> test performance shows how well it predicts <span data-ex-copy="target">pressure drop</span> for unseen conditions.
+          <strong>What to look for:</strong> a lower prediction error (RMSE<span data-ex-copy="unitSuffix">, in kPa</span>) and points near the diagonal.
         </div>
         <div class="action-row wrap">
           <button class="button primary" id="exploreTrainBtn" type="button">Train and show predictions</button>
@@ -289,7 +290,7 @@
         <div class="info-box">
           <strong>What you are doing:</strong> reading a plain-language summary of what the model learned.
           <strong>Why it matters:</strong> metrics and predictions only help if you know what they mean in engineering terms.
-          <strong>What to look for:</strong> sensible physical trends, errors in kPa, and honest limits.
+          <strong>What to look for:</strong> <span data-ex-copy="stage4Look">sensible physical trends, errors in kPa, and honest limits</span>.
         </div>
         <div id="exploreInterpretation" class="explore-interpretation" aria-live="polite"></div>
         <div id="exploreEngineering" class="explore-interpretation explore-engineering" aria-live="polite"></div>

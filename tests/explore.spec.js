@@ -108,7 +108,7 @@ test.describe('Engineering ML Studio — Phase 1 landing + problem-led Explore',
     await expect(page.locator('#exploreSteps li')).toHaveCount(4);
     await expect(page.locator('#exploreHeading')).toContainText('pressure drop');
     await expect(page.locator('#explore-stage-1')).toBeVisible();
-    await expect(page.locator('#exploreStage1Heading')).toContainText('pressure-drop problem');
+    await expect(page.locator('#exploreStage1Heading')).toContainText('pressure drop');
   });
 
   test('6. stage 1 describes the problem with SI units, target, trends and a disclaimer', async ({ page }) => {
@@ -454,6 +454,37 @@ test.describe('Engineering ML Studio — Phase 1 landing + problem-led Explore',
 
     await page.goForward();
     await expect(page.locator('#exploreExampleSwitch input[value="steel"]')).toBeChecked();
+  });
+
+  test('A4. the page heading and guidance follow the selected example, not just the problem panel', async ({ page }) => {
+    await page.goto('/?localOnly=1#explore/steel');
+    await appReady(page);
+
+    await expect(page.locator('#exploreHeading')).toHaveText('Predict steel yield strength');
+    await expect(page.locator('#exploreStage1Heading')).toContainText('steel yield strength');
+    // No pipe-specific phrase may survive anywhere in the shell copy.
+    for (const node of await page.locator('#view-explore [data-ex-copy]').all()) {
+      await expect(node).not.toContainText('pressure');
+      await expect(node).not.toContainText('kPa');
+    }
+    await expect(page.locator('#view-explore [data-ex-copy="target"]').first()).toHaveText('yield strength');
+    await expect(page.locator('#view-explore [data-ex-copy="unitSuffix"]')).toHaveText(', in MPa');
+
+    // Switching through the example picker updates the heading too.
+    await page.locator('.explore-other-examples summary').click();
+    await page.locator('#exploreExampleSwitch input[value="orifice"]').check();
+    await expect(page.locator('#exploreHeading')).toHaveText('Predict flow rate through an orifice');
+    await expect(page.locator('#view-explore [data-ex-copy="unitSuffix"]')).toHaveText(', in m³/s');
+
+    // The mathematical example is labelled as such and has no unit.
+    await page.locator('#exploreExampleSwitch input[value="nonlinear"]').check();
+    await expect(page.locator('#exploreEyebrowKind')).toHaveText('Guided mathematical example');
+    await expect(page.locator('#view-explore [data-ex-copy="unitSuffix"]')).toHaveText('');
+
+    // And back to the default.
+    await page.locator('#exploreExampleSwitch input[value="pipe"]').check();
+    await expect(page.locator('#exploreHeading')).toHaveText('Predict pressure drop in a pipe');
+    await expect(page.locator('#view-explore [data-ex-copy="unitSuffix"]')).toHaveText(', in kPa');
   });
 
   test('E1. returning to Explore through the navigation keeps the selected example in the URL', async ({ page }) => {
