@@ -96,7 +96,7 @@
       ],
       rangeText: 'The dataset has 500 rows. The convection coefficient spans 5–500 W/m²K (natural convection in air up to forced convection in liquids), so heat dissipation ranges from a few watts to roughly 20 kW.',
       disclaimer: 'This is a <strong>synthetic demonstration dataset</strong>, generated from Newton’s law of cooling with a fixed random seed and a small amount of added noise. It is not experimental, validated or safety-grade data, and must not be used for real design.',
-      schematic: false,
+      schematic: true,
       approxRows: 500
     },
     {
@@ -134,7 +134,7 @@
       ],
       rangeText: 'The dataset has 500 rows. Inputs cover carbon 0.02–0.12 wt%, manganese 0.30–1.60 wt%, silicon 0.05–0.50 wt%, grain size 2–50 µm, tempering temperature 200–650 °C and test temperature −20–100 °C. Yield strength ranges from roughly 140 to 590 MPa, with about 4% synthetic specimen-to-specimen scatter.',
       disclaimer: 'This is a <strong>synthetic demonstration dataset</strong>, generated from a simplified Hall–Petch and solid-solution strengthening relationship, with simplified temperature effects and added noise. It is not experimental, validated or safety-grade data, and predictions must not be used for real material selection, structural design or safety-critical qualification.',
-      schematic: false,
+      schematic: true,
       approxRows: 500
     },
     {
@@ -169,7 +169,7 @@
       ],
       rangeText: 'The dataset has 500 rows of synthetic orifice-flow conditions. Flow rate is expressed in m³/s across the demonstrated pressure, diameter, density and discharge-coefficient ranges.',
       disclaimer: 'This is a <strong>synthetic demonstration dataset</strong>, generated from a simplified orifice-flow relationship with a fixed random seed and a small amount of added noise. The discharge coefficient is an effective synthetic parameter for this dataset. It is not experimental, validated or safety-grade data, and must not be used for real flow-system design.',
-      schematic: false,
+      schematic: true,
       approxRows: 500
     },
     {
@@ -195,7 +195,7 @@
       trends: [],
       rangeText: 'A synthetic mathematical dataset of a few hundred rows spanning two continuous inputs.',
       disclaimer: 'This is a <strong>synthetic mathematical demonstration</strong>, intended to illustrate model behaviour on a nonlinear, noisy relationship. Use it to compare modelling approaches, not to draw engineering conclusions or make real-world decisions.',
-      schematic: false,
+      schematic: true,
       approxRows: 360
     }
   ];
@@ -303,6 +303,147 @@
       '<text x="252" y="52" font-size="11" fill="#a52b2b">low p</text>' +
     '</svg>';
 
+  // Schematics for the other examples, in the same style and palette as the pipe:
+  // inline SVG, no external asset, each labelled with the example's own inputs.
+  var COOLING_SCHEMATIC =
+    '<svg class="explore-schematic" viewBox="0 0 320 146" role="img" ' +
+        'aria-label="A hot surface of area A at temperature T_s with cooler fluid flowing over it at temperature T-infinity. ' +
+        'Heat Q leaves the surface by convection with coefficient h, driven by the temperature difference delta T.">' +
+      '<text x="160" y="14" text-anchor="middle" font-size="11" fill="#16202a">fluid at T<tspan baseline-shift="sub" font-size="8">&#8734;</tspan> flowing over the surface (convection coefficient h)</text>' +
+      '<line x1="40" y1="28" x2="272" y2="28" stroke="#125f76" stroke-width="2" stroke-dasharray="6 6"></line>' +
+      '<polygon points="272,22 284,28 272,34" fill="#125f76"></polygon>' +
+      '<line x1="40" y1="44" x2="272" y2="44" stroke="#125f76" stroke-width="2" stroke-dasharray="6 6"></line>' +
+      '<polygon points="272,38 284,44 272,50" fill="#125f76"></polygon>' +
+      '<line x1="95" y1="84" x2="95" y2="60" stroke="#a52b2b" stroke-width="2"></line><polygon points="90,62 95,52 100,62" fill="#a52b2b"></polygon>' +
+      '<line x1="135" y1="84" x2="135" y2="60" stroke="#a52b2b" stroke-width="2"></line><polygon points="130,62 135,52 140,62" fill="#a52b2b"></polygon>' +
+      '<line x1="175" y1="84" x2="175" y2="60" stroke="#a52b2b" stroke-width="2"></line><polygon points="170,62 175,52 180,62" fill="#a52b2b"></polygon>' +
+      '<line x1="215" y1="84" x2="215" y2="60" stroke="#a52b2b" stroke-width="2"></line><polygon points="210,62 215,52 220,62" fill="#a52b2b"></polygon>' +
+      '<text x="232" y="72" font-size="12" fill="#a52b2b">heat Q</text>' +
+      '<rect x="60" y="86" width="190" height="16" rx="2" fill="#f6dcd6" stroke="#a52b2b" stroke-width="2"></rect>' +
+      '<text x="155" y="98" text-anchor="middle" font-size="11" fill="#16202a">hot surface at T<tspan baseline-shift="sub" font-size="8">s</tspan></text>' +
+      '<line x1="60" y1="112" x2="250" y2="112" stroke="#16202a" stroke-width="1"></line>' +
+      '<line x1="60" y1="108" x2="60" y2="116" stroke="#16202a" stroke-width="1"></line><line x1="250" y1="108" x2="250" y2="116" stroke="#16202a" stroke-width="1"></line>' +
+      '<text x="155" y="126" text-anchor="middle" font-size="11" fill="#16202a">surface area A</text>' +
+      '<text x="160" y="142" text-anchor="middle" font-size="11" fill="#a52b2b">temperature difference &#916;T = T<tspan baseline-shift="sub" font-size="8">s</tspan> &#8722; T<tspan baseline-shift="sub" font-size="8">&#8734;</tspan></text>' +
+    '</svg>';
+
+  var STEEL_SCHEMATIC =
+    '<svg class="explore-schematic" viewBox="0 0 320 140" role="img" ' +
+        'aria-label="A dog-bone steel tensile specimen pulled by force F at both ends. Inset: fine grains give higher strength than coarse grains. ' +
+        'A stress-strain curve rises linearly and bends at the yield strength.">' +
+      '<rect x="14" y="22" width="34" height="30" rx="3" fill="#e7f4f7" stroke="#125f76" stroke-width="2"></rect>' +
+      '<rect x="48" y="30" width="84" height="14" fill="#e7f4f7" stroke="#125f76" stroke-width="2"></rect>' +
+      '<rect x="132" y="22" width="34" height="30" rx="3" fill="#e7f4f7" stroke="#125f76" stroke-width="2"></rect>' +
+      '<line x1="12" y1="37" x2="2" y2="37" stroke="#a52b2b" stroke-width="2"></line><polygon points="6,32 -2,37 6,42" fill="#a52b2b"></polygon>' +
+      '<line x1="168" y1="37" x2="178" y2="37" stroke="#a52b2b" stroke-width="2"></line><polygon points="174,32 182,37 174,42" fill="#a52b2b"></polygon>' +
+      '<text x="90" y="16" text-anchor="middle" font-size="11" fill="#16202a">tensile specimen, pulled by force F</text>' +
+      '<g stroke="#125f76" stroke-width="1" fill="#f3f8fa">' +
+        '<rect x="22" y="70" width="48" height="40"></rect>' +
+        '<path d="M22 80 H70 M22 90 H70 M22 100 H70 M34 70 V110 M46 70 V110 M58 70 V110" fill="none"></path>' +
+        '<rect x="104" y="70" width="48" height="40"></rect>' +
+        '<path d="M104 90 H152 M128 70 V110" fill="none"></path>' +
+      '</g>' +
+      '<text x="87" y="66" text-anchor="middle" font-size="10" fill="#555">grain size d</text>' +
+      '<text x="46" y="124" text-anchor="middle" font-size="11" fill="#16202a">fine grains</text>' +
+      '<text x="46" y="136" text-anchor="middle" font-size="10" fill="#a52b2b">stronger</text>' +
+      '<text x="128" y="124" text-anchor="middle" font-size="11" fill="#16202a">coarse grains</text>' +
+      '<text x="128" y="136" text-anchor="middle" font-size="10" fill="#555">weaker</text>' +
+      '<line x1="210" y1="112" x2="312" y2="112" stroke="#16202a" stroke-width="1.5"></line>' +
+      '<line x1="210" y1="112" x2="210" y2="18" stroke="#16202a" stroke-width="1.5"></line>' +
+      '<path d="M210 112 L236 46 Q242 34 256 32 L308 26" fill="none" stroke="#125f76" stroke-width="2.5"></path>' +
+      '<circle cx="239" cy="40" r="4" fill="#a52b2b"></circle>' +
+      '<text x="246" y="56" font-size="10" fill="#a52b2b">yield strength</text>' +
+      '<text x="246" y="69" font-size="11" fill="#a52b2b">&#963;<tspan baseline-shift="sub" font-size="8">y</tspan></text>' +
+      '<text x="261" y="128" text-anchor="middle" font-size="11" fill="#16202a">strain</text>' +
+      '<text x="200" y="66" text-anchor="middle" transform="rotate(-90 200 66)" font-size="11" fill="#16202a">stress</text>' +
+    '</svg>';
+
+  var ORIFICE_SCHEMATIC =
+    '<svg class="explore-schematic" viewBox="0 0 320 130" role="img" ' +
+        'aria-label="Fluid of density rho flows left to right through a pipe and a thin plate with a circular hole of diameter d. ' +
+        'Pressure taps before and after the plate show a pressure difference delta p, which drives the flow rate Q.">' +
+      '<rect x="98" y="16" width="8" height="34" fill="#e7f4f7" stroke="#125f76" stroke-width="1.5"></rect>' +
+      '<rect x="99.5" y="20" width="5" height="30" fill="#7fb6c6"></rect>' +
+      '<rect x="210" y="16" width="8" height="34" fill="#e7f4f7" stroke="#125f76" stroke-width="1.5"></rect>' +
+      '<rect x="211.5" y="36" width="5" height="14" fill="#7fb6c6"></rect>' +
+      '<line x1="122" y1="20" x2="122" y2="36" stroke="#a52b2b" stroke-width="1.5"></line>' +
+      '<polygon points="118,24 122,18 126,24" fill="#a52b2b"></polygon><polygon points="118,32 122,38 126,32" fill="#a52b2b"></polygon>' +
+      '<text x="128" y="31" font-size="12" fill="#a52b2b">&#916;p</text>' +
+      '<line x1="96" y1="20" x2="220" y2="20" stroke="#a52b2b" stroke-width="1" stroke-dasharray="3 3"></line>' +
+      '<line x1="96" y1="36" x2="220" y2="36" stroke="#a52b2b" stroke-width="1" stroke-dasharray="3 3"></line>' +
+      '<line x1="20" y1="50" x2="300" y2="50" stroke="#125f76" stroke-width="2"></line>' +
+      '<line x1="20" y1="104" x2="300" y2="104" stroke="#125f76" stroke-width="2"></line>' +
+      '<rect x="20" y="50" width="280" height="54" fill="#e7f4f7" opacity=".6"></rect>' +
+      '<rect x="156" y="50" width="6" height="17" fill="#125f76"></rect>' +
+      '<rect x="156" y="87" width="6" height="17" fill="#125f76"></rect>' +
+      '<g fill="none" stroke="#125f76" stroke-width="1.5" stroke-dasharray="5 4">' +
+        '<path d="M28 60 C110 60 140 71 159 72 C190 73 230 62 288 60"></path>' +
+        '<path d="M28 77 L288 77"></path>' +
+        '<path d="M28 94 C110 94 140 83 159 82 C190 81 230 92 288 94"></path>' +
+      '</g>' +
+      '<polygon points="288,72 298,77 288,82" fill="#125f76"></polygon>' +
+      '<text x="40" y="118" font-size="11" fill="#16202a">fluid density &#961;</text>' +
+      '<text x="238" y="118" font-size="11" fill="#16202a">flow rate Q &#8594;</text>' +
+      '<line x1="170" y1="68" x2="170" y2="86" stroke="#16202a" stroke-width="1"></line>' +
+      '<text x="174" y="80" font-size="11" fill="#16202a">d</text>' +
+      '<text x="159" y="126" text-anchor="middle" font-size="10" fill="#555">orifice plate</text>' +
+    '</svg>';
+
+  var NONLINEAR_SCHEMATIC =
+    '<svg class="explore-schematic" viewBox="0 0 320 120" role="img" ' +
+        'aria-label="Noisy data points scattered around a wavy curve. A straight line through them misses the curvature.">' +
+      '<line x1="36" y1="100" x2="304" y2="100" stroke="#16202a" stroke-width="1.5"></line>' +
+      '<line x1="36" y1="100" x2="36" y2="8" stroke="#16202a" stroke-width="1.5"></line>' +
+      '<polyline points="40.0,57.5 44.3,55.1 48.6,52.7 53.0,50.4 57.3,48.1 61.6,46.0 65.9,44.0 70.3,42.3 74.6,40.8 78.9,39.6 83.2,38.8 87.5,38.3 91.9,38.2 96.2,38.4 100.5,39.0 104.8,40.0 109.2,41.4 113.5,43.0 117.8,45.1 122.1,47.3 126.4,49.9 130.8,52.6 135.1,55.5 139.4,58.4 143.7,61.4 148.1,64.4 152.4,67.3 156.7,70.0 161.0,72.6 165.3,74.9 169.7,76.9 174.0,78.6 178.3,79.9 182.6,80.7 186.9,81.2 191.3,81.2 195.6,80.7 199.9,79.7 204.2,78.4 208.6,76.5 212.9,74.3 217.2,71.8 221.5,68.9 225.8,65.7 230.2,62.4 234.5,58.9 238.8,55.3 243.1,51.7 247.5,48.2 251.8,44.8 256.1,41.5 260.4,38.6 264.7,36.0 269.1,33.7 273.4,31.9 277.7,30.6 282.0,29.7 286.4,29.4 290.7,29.6 295.0,30.4" fill="none" stroke="#125f76" stroke-width="2" opacity=".5"></polyline>' +
+      '<circle cx="40.0" cy="58.8" r="2.6" fill="#125f76" opacity=".75"></circle>' +
+      '<circle cx="47.7" cy="50.5" r="2.6" fill="#125f76" opacity=".75"></circle>' +
+      '<circle cx="55.5" cy="50.2" r="2.6" fill="#125f76" opacity=".75"></circle>' +
+      '<circle cx="63.2" cy="46.9" r="2.6" fill="#125f76" opacity=".75"></circle>' +
+      '<circle cx="70.9" cy="46.9" r="2.6" fill="#125f76" opacity=".75"></circle>' +
+      '<circle cx="78.6" cy="40.8" r="2.6" fill="#125f76" opacity=".75"></circle>' +
+      '<circle cx="86.4" cy="32.6" r="2.6" fill="#125f76" opacity=".75"></circle>' +
+      '<circle cx="94.1" cy="36.0" r="2.6" fill="#125f76" opacity=".75"></circle>' +
+      '<circle cx="101.8" cy="33.8" r="2.6" fill="#125f76" opacity=".75"></circle>' +
+      '<circle cx="109.5" cy="40.2" r="2.6" fill="#125f76" opacity=".75"></circle>' +
+      '<circle cx="117.3" cy="42.7" r="2.6" fill="#125f76" opacity=".75"></circle>' +
+      '<circle cx="125.0" cy="48.0" r="2.6" fill="#125f76" opacity=".75"></circle>' +
+      '<circle cx="132.7" cy="62.6" r="2.6" fill="#125f76" opacity=".75"></circle>' +
+      '<circle cx="140.5" cy="54.7" r="2.6" fill="#125f76" opacity=".75"></circle>' +
+      '<circle cx="148.2" cy="61.8" r="2.6" fill="#125f76" opacity=".75"></circle>' +
+      '<circle cx="155.9" cy="66.9" r="2.6" fill="#125f76" opacity=".75"></circle>' +
+      '<circle cx="163.6" cy="82.9" r="2.6" fill="#125f76" opacity=".75"></circle>' +
+      '<circle cx="171.4" cy="86.8" r="2.6" fill="#125f76" opacity=".75"></circle>' +
+      '<circle cx="179.1" cy="84.7" r="2.6" fill="#125f76" opacity=".75"></circle>' +
+      '<circle cx="186.8" cy="83.6" r="2.6" fill="#125f76" opacity=".75"></circle>' +
+      '<circle cx="194.5" cy="79.2" r="2.6" fill="#125f76" opacity=".75"></circle>' +
+      '<circle cx="202.3" cy="79.3" r="2.6" fill="#125f76" opacity=".75"></circle>' +
+      '<circle cx="210.0" cy="73.1" r="2.6" fill="#125f76" opacity=".75"></circle>' +
+      '<circle cx="217.7" cy="74.8" r="2.6" fill="#125f76" opacity=".75"></circle>' +
+      '<circle cx="225.5" cy="64.4" r="2.6" fill="#125f76" opacity=".75"></circle>' +
+      '<circle cx="233.2" cy="57.9" r="2.6" fill="#125f76" opacity=".75"></circle>' +
+      '<circle cx="240.9" cy="57.0" r="2.6" fill="#125f76" opacity=".75"></circle>' +
+      '<circle cx="248.6" cy="38.2" r="2.6" fill="#125f76" opacity=".75"></circle>' +
+      '<circle cx="256.4" cy="38.4" r="2.6" fill="#125f76" opacity=".75"></circle>' +
+      '<circle cx="264.1" cy="30.1" r="2.6" fill="#125f76" opacity=".75"></circle>' +
+      '<circle cx="271.8" cy="35.8" r="2.6" fill="#125f76" opacity=".75"></circle>' +
+      '<circle cx="279.5" cy="34.0" r="2.6" fill="#125f76" opacity=".75"></circle>' +
+      '<circle cx="287.3" cy="31.2" r="2.6" fill="#125f76" opacity=".75"></circle>' +
+      '<circle cx="295.0" cy="31.0" r="2.6" fill="#125f76" opacity=".75"></circle>' +
+      '<line x1="40" y1="62" x2="295" y2="52" stroke="#a52b2b" stroke-width="2" stroke-dasharray="6 5"></line>' +
+      '<text x="110" y="114" text-anchor="middle" font-size="11" fill="#16202a">input</text>' +
+      '<text x="26" y="54" text-anchor="middle" transform="rotate(-90 26 54)" font-size="11" fill="#16202a">target</text>' +
+      '<line x1="168" y1="110" x2="186" y2="110" stroke="#a52b2b" stroke-width="2" stroke-dasharray="6 5"></line>' +
+      '<text x="190" y="114" font-size="10" fill="#a52b2b">straight-line fit</text>' +
+    '</svg>';
+
+  var SCHEMATICS = {
+    pipe: PIPE_SCHEMATIC,
+    cooling: COOLING_SCHEMATIC,
+    steel: STEEL_SCHEMATIC,
+    orifice: ORIFICE_SCHEMATIC,
+    nonlinear: NONLINEAR_SCHEMATIC
+  };
+
   function renderProblem() {
     var host = el('exploreProblem');
     if (!host) return;
@@ -317,7 +458,7 @@
       ? '<div class="info-box compact-box"><strong>Expected trend:</strong> ' + escapeHtml(ex.trendText) + '</div>'
       : '';
 
-    var schematic = ex.schematic ? '<div class="explore-schematic-wrap">' + PIPE_SCHEMATIC + '</div>' : '';
+    var schematic = SCHEMATICS[ex.key] ? '<div class="explore-schematic-wrap">' + SCHEMATICS[ex.key] + '</div>' : '';
 
     syncExampleCopy(ex);
 

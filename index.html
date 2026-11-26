@@ -96,10 +96,12 @@
       <!-- Stage 1: understand the problem -->
       <section class="explore-stage" id="explore-stage-1" aria-labelledby="exploreStage1Heading">
         <h2 id="exploreStage1Heading" class="explore-stage-title">Understand the problem: pressure drop in a pipe</h2>
-        <div class="info-box">
-          <strong>What you are doing:</strong> getting to know the engineering problem before modelling it.
-          <strong>Why it matters:</strong> knowing the inputs, the target and the expected physical trends helps you judge whether a model is sensible.
-          <strong>What to look for:</strong> the units, the range of the data, and that this is a synthetic demonstration.
+        <div class="info-box explore-guide">
+          <ul class="explore-guide-list">
+            <li><strong>What you are doing:</strong> getting to know the engineering problem before modelling it.</li>
+            <li><strong>Why it matters:</strong> knowing the inputs, the target and the expected physical trends helps you judge whether a model is sensible.</li>
+            <li><strong>What to look for:</strong> the units, the range of the data, and that this is a synthetic demonstration.</li>
+          </ul>
         </div>
         <div id="exploreProblem" class="explore-problem"><!-- problem description injected by explore.js --></div>
         <details class="explore-other-examples">
@@ -118,10 +120,12 @@
       <!-- Stage 2: choose an approach -->
       <section class="explore-stage is-hidden" id="explore-stage-2" aria-labelledby="exploreStage2Heading">
         <h2 id="exploreStage2Heading" class="explore-stage-title">Choose an approach</h2>
-        <div class="info-box">
-          <strong>What you are doing:</strong> deciding how much flexibility the tool should use to learn the relationship.
-          <strong>Why it matters:</strong> a simple trend is easy to read, while a flexible relationship can fit curved, nonlinear behaviour.
-          <strong>What to look for:</strong> start simple, then try a more flexible approach and see whether it does better.
+        <div class="info-box explore-guide">
+          <ul class="explore-guide-list">
+            <li><strong>What you are doing:</strong> deciding how much flexibility the tool should use to learn the relationship.</li>
+            <li><strong>Why it matters:</strong> a simple trend is easy to read, while a flexible relationship can fit curved, nonlinear behaviour.</li>
+            <li><strong>What to look for:</strong> start simple, then try a more flexible approach and see whether it does better.</li>
+          </ul>
         </div>
         <div class="model-grid explore-approach-grid" role="radiogroup" aria-label="Modelling approach">
           <label class="model-card"><input type="radio" name="exploreApproach" value="simple" checked>
@@ -216,10 +220,12 @@
       <!-- Stage 3: train and compare predictions -->
       <section class="explore-stage is-hidden" id="explore-stage-3" aria-labelledby="exploreStage3Heading">
         <h2 id="exploreStage3Heading" class="explore-stage-title">Train and compare predictions</h2>
-        <div class="info-box">
-          <strong>What you are doing:</strong> fitting the chosen approach on training data and checking it on held-back test data.
-          <strong>Why it matters:</strong> test performance shows how well it predicts <span data-ex-copy="target">pressure drop</span> for unseen conditions.
-          <strong>What to look for:</strong> a lower prediction error (RMSE<span data-ex-copy="unitSuffix">, in kPa</span>) and points near the diagonal.
+        <div class="info-box explore-guide">
+          <ul class="explore-guide-list">
+            <li><strong>What you are doing:</strong> fitting the chosen approach on training data and checking it on held-back test data.</li>
+            <li><strong>Why it matters:</strong> test performance shows how well it predicts <span data-ex-copy="target">pressure drop</span> for unseen conditions.</li>
+            <li><strong>What to look for:</strong> a lower prediction error (RMSE<span data-ex-copy="unitSuffix">, in kPa</span>) and points near the diagonal.</li>
+          </ul>
         </div>
         <div class="action-row wrap">
           <button class="button primary" id="exploreTrainBtn" type="button">Train and show predictions</button>
@@ -287,10 +293,12 @@
       <!-- Stage 4: interpret the engineering meaning -->
       <section class="explore-stage is-hidden" id="explore-stage-4" aria-labelledby="exploreStage4Heading">
         <h2 id="exploreStage4Heading" class="explore-stage-title">Interpret the engineering meaning</h2>
-        <div class="info-box">
-          <strong>What you are doing:</strong> reading a plain-language summary of what the model learned.
-          <strong>Why it matters:</strong> metrics and predictions only help if you know what they mean in engineering terms.
-          <strong>What to look for:</strong> <span data-ex-copy="stage4Look">sensible physical trends, errors in kPa, and honest limits</span>.
+        <div class="info-box explore-guide">
+          <ul class="explore-guide-list">
+            <li><strong>What you are doing:</strong> reading a plain-language summary of what the model learned.</li>
+            <li><strong>Why it matters:</strong> metrics and predictions only help if you know what they mean in engineering terms.</li>
+            <li><strong>What to look for:</strong> <span data-ex-copy="stage4Look">sensible physical trends, errors in kPa, and honest limits</span>.</li>
+          </ul>
         </div>
         <div id="exploreInterpretation" class="explore-interpretation" aria-live="polite"></div>
         <div id="exploreEngineering" class="explore-interpretation explore-engineering" aria-live="polite"></div>

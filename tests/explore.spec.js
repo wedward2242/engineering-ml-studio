@@ -487,6 +487,30 @@ test.describe('Engineering ML Studio — Phase 1 landing + problem-led Explore',
     await expect(page.locator('#view-explore [data-ex-copy="unitSuffix"]')).toHaveText(', in kPa');
   });
 
+  test('A4. every example has its own labelled schematic, and stage guidance is a three-item list', async ({ page }) => {
+    await page.goto('/?localOnly=1');
+    await appReady(page);
+    await enterExplore(page);
+
+    const guide = page.locator('#explore-stage-1 .explore-guide-list > li');
+    await expect(guide).toHaveCount(3);
+    await expect(guide.nth(0)).toContainText('What you are doing:');
+    await expect(guide.nth(1)).toContainText('Why it matters:');
+    await expect(guide.nth(2)).toContainText('What to look for:');
+
+    const labels = new Set();
+    for (const key of ['pipe', 'cooling', 'steel', 'orifice', 'nonlinear']) {
+      await page.evaluate(k => window.EMSExplore.selectExample(k), key);
+      const svg = page.locator('#exploreProblem svg.explore-schematic');
+      await expect(svg, key).toBeVisible();
+      const label = await svg.getAttribute('aria-label');
+      expect(label && label.length, key + ': schematic has an accessible description').toBeGreaterThan(40);
+      labels.add(label);
+    }
+    // Each example shows a different figure, not the pipe reused.
+    expect(labels.size).toBe(5);
+  });
+
   test('E1. returning to Explore through the navigation keeps the selected example in the URL', async ({ page }) => {
     await page.goto('/?localOnly=1#explore/cooling');
     await appReady(page);

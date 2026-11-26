@@ -105,6 +105,9 @@
 .explore-stage { margin-bottom: 1rem; }
 .explore-stage-title { margin: 0 0 .5rem; font-size: 1.35rem; }
 
+/* Stage guidance: what you are doing / why it matters / what to look for */
+.explore-guide-list { margin: 0; padding-left: 1.2rem; display: grid; gap: .3rem; line-height: 1.5; }
+
 /* Stage 1: the engineering problem */
 .explore-problem { display: grid; gap: 1rem; }
 .explore-problem-intro { margin: 0; line-height: 1.6; max-width: 72ch; }
