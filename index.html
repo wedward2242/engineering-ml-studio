@@ -236,30 +236,32 @@
             </h3>
 
             <p class="fine-print">
-              Both models are trained using the same dataset and evaluated
-              against the same unseen test observations. Compare how the
-              Decision Tree and Random Forest fit the data.
+              The same model, a Decision Tree, is fitted to the same training rows at every depth from 1 to 15.
+              Deeper trees are more flexible. A sensible depth is chosen using the separate
+              <strong>validation</strong> rows, and both trees are then judged on the same unseen
+              <strong>test</strong> rows.
             </p>
+
+            <div class="chart-card">
+              <h3>Training error versus validation error as the tree gets deeper</h3>
+              <div class="plot" id="exploreOverfitCurvePlot"></div>
+            </div>
 
             <div class="charts-grid">
               <div class="chart-card">
-                <h3>Decision Tree</h3>
-                <div class="plot" id="exploreOverfitTreePlot"></div>
-                <p class="fine-print" id="exploreOverfitTreeMetrics"></p>
+                <h3 id="exploreOverfitSensibleTitle">Sensible fit</h3>
+                <div class="plot" id="exploreOverfitSensiblePlot"></div>
+                <p class="fine-print" id="exploreOverfitSensibleMetrics"></p>
               </div>
 
               <div class="chart-card">
-                <h3>Random Forest</h3>
-                <div class="plot" id="exploreOverfitForestPlot"></div>
-                <p class="fine-print" id="exploreOverfitForestMetrics"></p>
+                <h3 id="exploreOverfitFlexibleTitle">Too flexible</h3>
+                <div class="plot" id="exploreOverfitFlexiblePlot"></div>
+                <p class="fine-print" id="exploreOverfitFlexibleMetrics"></p>
               </div>
             </div>
 
-            <div class="chart-card">
-              <h3>Training error versus test error</h3>
-              <div class="plot" id="exploreOverfitRmsePlot"></div>
-              <p class="fine-print" id="exploreOverfitExplanation"></p>
-            </div>
+            <p id="exploreOverfitExplanation"></p>
           </div>
         </section>
         <label class="explore-focus is-hidden" id="exploreFocusWrap">Show predictions for

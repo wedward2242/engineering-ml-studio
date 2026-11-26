@@ -525,17 +525,17 @@
     if (!pre.outputNames.length) throw new Error('No usable features remain for this example.');
     var tTrain = ML.transformRows(rawTrain, pre, dataset.target, true);
     var tTest = ML.transformRows(rawTest, pre, dataset.target, true);
+    var tValidation = rawValidation.length ? ML.transformRows(rawValidation, pre, dataset.target, true) : null;
     var tt = ML.fitTargetTransform(tTrain.y, 'none');
     var yTrain = ML.applyTargetTransform(tTrain.y, tt);
 
     // The neural network benefits from a real validation set for honest early stopping.
     // Other models ignore these fields, so this stays a contained, model-specific addition.
     var fitParams = params;
-    if (modelType === 'ann' && rawValidation.length) {
-      var tVal = ML.transformRows(rawValidation, pre, dataset.target, true);
+    if (modelType === 'ann' && tValidation) {
       fitParams = Object.assign({}, params, {
-        _validationX: tVal.X,
-        _validationY: ML.applyTargetTransform(tVal.y, tt)
+        _validationX: tValidation.X,
+        _validationY: ML.applyTargetTransform(tValidation.y, tt)
       });
     }
 
@@ -547,9 +547,13 @@
       ML.fitSmearing(tt, yTrain, adapter.predict(model, tTrain.X));
       var predTrain = ML.inverseTargetTransform(adapter.predict(model, tTrain.X), tt, true);
       var predTest = ML.inverseTargetTransform(adapter.predict(model, tTest.X), tt, true);
+      var validationMetrics = tValidation
+        ? ML.metrics(tValidation.y, ML.inverseTargetTransform(adapter.predict(model, tValidation.X), tt, true))
+        : null;
       return {
         trainMetrics: ML.metrics(tTrain.y, predTrain),
         testMetrics: ML.metrics(tTest.y, predTest),
+        validationMetrics: validationMetrics,
         actual: tTest.y.slice(),
         predicted: predTest.slice(),
         params: params,
@@ -620,7 +624,9 @@
             state.results[modelType] = res;
           });
         });
-      }, Promise.resolve());
+      }, Promise.resolve()).then(function () {
+        if (state.approach === 'compare') return runOverfitSweep(dataset);
+      });
     }).then(function () {
       setBusy(false, '');
       state.focusModel = bestModel(types);
@@ -663,139 +669,151 @@
       '<th>Test R²</th><th>Training RMSE' + unitSuffix + '</th></tr></thead><tbody>' + body + '</tbody>';
     if (wrap) wrap.classList.remove('is-hidden');
   }
-  // B2: demonstrate how training and test performance can differ.
+  // B2: a deliberate overfitting demonstration.
+  //
+  // The same existing model (a Decision Tree) is fitted at every depth in
+  // OVERFIT_DEPTHS with one-row leaves, so depth is the only flexibility knob.
+  // The sensible depth is the shallowest whose *validation* RMSE is within
+  // OVERFIT_TOLERANCE of the best (prefer the simplest model that does about
+  // as well); the too-flexible tree is the deepest. Both are then reported on
+  // the same test rows, which played no part in choosing the depth.
+  //
+  // What this reliably shows on every bundled dataset is the train/test gap:
+  // training error keeps falling with depth while validation error flattens,
+  // so the deep tree's training score badly overstates its accuracy. With
+  // ~75 validation and test rows, whether the deep tree is also *worse* on the
+  // test rows is not reliable, so the copy states that comparison factually
+  // rather than promising it. Nothing here changes the comparison table.
+  var OVERFIT_DEPTHS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15];
+  var OVERFIT_TOLERANCE = 0.10;
+
+  function overfitTreeParams(depth) {
+    return { maxDepth: depth, minLeaf: 1, maxThresholds: 24, maxFeatures: 'all' };
+  }
+
+  function runOverfitSweep(dataset) {
+    var sweep = [];
+    return OVERFIT_DEPTHS.reduce(function (chain, depth) {
+      return chain.then(function () {
+        return runPipeline(dataset, 'tree', overfitTreeParams(depth)).then(function (res) {
+          sweep.push({ depth: depth, result: res });
+        });
+      });
+    }, Promise.resolve()).then(function () {
+      var usable = sweep.filter(function (s) { return s.result.validationMetrics; });
+      if (!usable.length) { state.overfitDemo = null; return; }
+      var bestRmse = Math.min.apply(null, usable.map(function (s) { return s.result.validationMetrics.rmse; }));
+      var sensible = usable.filter(function (s) {
+        return s.result.validationMetrics.rmse <= (1 + OVERFIT_TOLERANCE) * bestRmse;
+      })[0];
+      state.overfitDemo = {
+        sweep: sweep,
+        sensible: sensible,
+        flexible: sweep[sweep.length - 1]
+      };
+    });
+  }
+
+  function renderOverfitScatter(plotId, title, result) {
+    var all = result.actual.concat(result.predicted).filter(function (v) { return isFinite(v); });
+    var min = Math.min.apply(null, all);
+    var max = Math.max.apply(null, all);
+    if (!isFinite(min) || !isFinite(max) || min === max) { min -= 1; max += 1; }
+    var unit = currentUnit();
+    var target = exampleByKey(state.exampleKey).targetLabel + (unit ? ' (' + unit + ')' : '');
+    global.Plotly.react(plotId, [
+      {
+        x: result.actual, y: result.predicted, mode: 'markers', type: 'scatter',
+        name: 'Test rows', marker: { color: '#125f76', size: 7, opacity: 0.75 },
+        hovertemplate: 'Actual %{x}<br>Predicted %{y}<extra></extra>'
+      },
+      {
+        x: [min, max], y: [min, max], mode: 'lines', type: 'scatter',
+        name: 'Perfect prediction', line: { dash: 'dash', color: '#a52b2b' }, hoverinfo: 'skip'
+      }
+    ], {
+      title: { text: title, font: { size: 14 } },
+      xaxis: { title: { text: 'Actual ' + target }, automargin: true },
+      yaxis: { title: { text: 'Predicted ' + target }, automargin: true },
+      showlegend: false,
+      margin: { l: 60, r: 15, t: 40, b: 55 },
+      paper_bgcolor: 'rgba(0,0,0,0)', plot_bgcolor: 'rgba(0,0,0,0)'
+    }, { responsive: true, displaylogo: false, modeBarButtonsToRemove: ['lasso2d', 'select2d'] });
+  }
+
   function renderOverfitDemo() {
     var panel = el('exploreOverfitDemo');
     if (!panel) return;
-
-    var tree = state.results.tree;
-    var forest = state.results.forest;
-
-    if (state.approach !== 'compare' || !tree || !forest ||
-        !global.Plotly || !tree.actual || !forest.actual ||
-        tree.actual.length !== forest.actual.length ||
-        tree.actual.some(function (value, index) {
-          return value !== forest.actual[index];
-        })) {
+    var demo = state.overfitDemo;
+    if (state.approach !== 'compare' || !demo || !global.Plotly) {
       panel.classList.add('is-hidden');
       return;
     }
-
     panel.classList.remove('is-hidden');
 
-    function renderModelPlot(modelType, result, plotId) {
-      var all = result.actual.concat(result.predicted)
-        .filter(function (value) { return isFinite(value); });
+    var unit = currentUnit();
+    var unitSuffix = unit ? ' ' + unit : '';
+    var depths = demo.sweep.map(function (s) { return s.depth; });
 
-      var min = Math.min.apply(null, all);
-      var max = Math.max.apply(null, all);
-
-      if (!isFinite(min) || !isFinite(max) || min === max) {
-        min -= 1;
-        max += 1;
+    global.Plotly.react('exploreOverfitCurvePlot', [
+      {
+        x: depths, y: demo.sweep.map(function (s) { return s.result.trainMetrics.rmse; }),
+        mode: 'lines+markers', type: 'scatter', name: 'Training RMSE', line: { color: '#125f76' }
+      },
+      {
+        x: depths, y: demo.sweep.map(function (s) { return s.result.validationMetrics ? s.result.validationMetrics.rmse : null; }),
+        mode: 'lines+markers', type: 'scatter', name: 'Validation RMSE', line: { color: '#a52b2b' }
       }
+    ], {
+      xaxis: { title: { text: 'Tree depth (more flexible →)' }, dtick: 1, automargin: true },
+      yaxis: { title: { text: 'RMSE' + unitSuffix }, rangemode: 'tozero', automargin: true },
+      shapes: [{
+        type: 'line', x0: demo.sensible.depth, x1: demo.sensible.depth, yref: 'paper', y0: 0, y1: 1,
+        line: { dash: 'dot', color: '#555' }
+      }],
+      annotations: [{
+        x: demo.sensible.depth, yref: 'paper', y: 1, text: 'sensible depth',
+        showarrow: false, yanchor: 'bottom', font: { size: 11 }
+      }],
+      margin: { l: 65, r: 20, t: 30, b: 55 },
+      legend: { orientation: 'h', y: -0.3 },
+      paper_bgcolor: 'rgba(0,0,0,0)', plot_bgcolor: 'rgba(0,0,0,0)'
+    }, { responsive: true, displaylogo: false, modeBarButtonsToRemove: ['lasso2d', 'select2d'] });
 
-      var unit = currentUnit();
-      var target = exampleByKey(state.exampleKey).targetLabel +
-        (unit ? ' (' + unit + ')' : '');
-
-      global.Plotly.react(plotId, [
-        {
-          x: result.actual,
-          y: result.predicted,
-          mode: 'markers',
-          type: 'scatter',
-          name: 'Test observations',
-          marker: { color: '#125f76', size: 7, opacity: 0.75 },
-          hovertemplate: 'Actual %{x}<br>Predicted %{y}<extra></extra>'
-        },
-        {
-          x: [min, max],
-          y: [min, max],
-          mode: 'lines',
-          type: 'scatter',
-          name: 'Perfect prediction',
-          line: { dash: 'dash', color: '#a52b2b' },
-          hoverinfo: 'skip'
-        }
-      ], {
-        title: { text: MODEL_LABELS[modelType], font: { size: 14 } },
-        xaxis: { title: { text: 'Actual ' + target }, automargin: true },
-        yaxis: { title: { text: 'Predicted ' + target }, automargin: true },
-        margin: { l: 60, r: 15, t: 40, b: 55 },
-        paper_bgcolor: 'rgba(0,0,0,0)',
-        plot_bgcolor: 'rgba(0,0,0,0)'
-      }, {
-        responsive: true,
-        displaylogo: false,
-        modeBarButtonsToRemove: ['lasso2d', 'select2d']
-      });
-    }
-
-    renderModelPlot('tree', tree, 'exploreOverfitTreePlot');
-    renderModelPlot('forest', forest, 'exploreOverfitForestPlot');
-
-    var unitSuffix = currentUnit() ? ' ' + currentUnit() : '';
+    var s = demo.sensible, f = demo.flexible;
+    el('exploreOverfitSensibleTitle').textContent = 'Sensible fit: depth ' + s.depth + ' (chosen using validation rows)';
+    el('exploreOverfitFlexibleTitle').textContent = 'Too flexible: depth ' + f.depth;
+    renderOverfitScatter('exploreOverfitSensiblePlot', 'Decision Tree, depth ' + s.depth, s.result);
+    renderOverfitScatter('exploreOverfitFlexiblePlot', 'Decision Tree, depth ' + f.depth, f.result);
 
     function metricsText(result) {
       return 'Training RMSE: ' + fmt(result.trainMetrics.rmse) + unitSuffix +
         '. Test RMSE: ' + fmt(result.testMetrics.rmse) + unitSuffix + '.';
     }
+    el('exploreOverfitSensibleMetrics').textContent = metricsText(s.result);
+    el('exploreOverfitFlexibleMetrics').textContent = metricsText(f.result);
 
-    el('exploreOverfitTreeMetrics').textContent = metricsText(tree);
-    el('exploreOverfitForestMetrics').textContent = metricsText(forest);
-
-    global.Plotly.react('exploreOverfitRmsePlot', [
-      {
-        x: ['Decision Tree', 'Random Forest'],
-        y: [tree.trainMetrics.rmse, forest.trainMetrics.rmse],
-        type: 'bar',
-        name: 'Training RMSE'
-      },
-      {
-        x: ['Decision Tree', 'Random Forest'],
-        y: [tree.testMetrics.rmse, forest.testMetrics.rmse],
-        type: 'bar',
-        name: 'Test RMSE'
-      }
-    ], {
-      title: { text: 'Training versus test RMSE', font: { size: 14 } },
-      xaxis: { title: { text: 'Model' }, automargin: true },
-      yaxis: {
-        title: { text: 'RMSE' + unitSuffix },
-        rangemode: 'tozero',
-        automargin: true
-      },
-      barmode: 'group',
-      margin: { l: 65, r: 20, t: 45, b: 55 },
-      legend: { orientation: 'h', y: -0.25 },
-      paper_bgcolor: 'rgba(0,0,0,0)',
-      plot_bgcolor: 'rgba(0,0,0,0)'
-    }, {
-      responsive: true,
-      displaylogo: false,
-      modeBarButtonsToRemove: ['lasso2d', 'select2d']
-    });
-
-    var treeGap = tree.testMetrics.rmse - tree.trainMetrics.rmse;
-    var forestGap = forest.testMetrics.rmse - forest.trainMetrics.rmse;
-    var explanation = '';
-
-    if (treeGap > 0 && treeGap > forestGap) {
-      explanation = 'The Decision Tree has a larger gap between training and test error. ' +
-        'This is evidence that it fits its training observations more closely than it ' +
-        'generalises to unseen observations. The Random Forest has a smaller gap ' +
-        'in this comparison.';
-    } else if (treeGap > 0 || forestGap > 0) {
-      explanation = 'At least one model has higher error on unseen test observations ' +
-        'than on its training observations. This difference is a generalisation gap. ' +
-        'Compare both gaps rather than assuming one model always overfits.';
+    var first = demo.sweep[0].result;
+    var flexRatio = f.result.testMetrics.rmse / f.result.trainMetrics.rmse;
+    var sensRatio = s.result.testMetrics.rmse / s.result.trainMetrics.rmse;
+    var testComparison;
+    if (f.result.testMetrics.rmse > s.result.testMetrics.rmse) {
+      testComparison = 'On the unseen test rows the depth-' + f.depth + ' tree is also worse: ' +
+        fmt(f.result.testMetrics.rmse) + unitSuffix + ' against ' + fmt(s.result.testMetrics.rmse) + unitSuffix + '.';
     } else {
-      explanation = 'Neither model has a higher test RMSE than training RMSE in this ' +
-        'run. This comparison does not show the usual pattern of overfitting. ' +
-        'Overfitting is a possible risk, not something to assume in advance.';
+      testComparison = 'On the unseen test rows the depth-' + f.depth + ' tree scores ' + fmt(f.result.testMetrics.rmse) + unitSuffix +
+        ' against ' + fmt(s.result.testMetrics.rmse) + unitSuffix + ' for the depth-' + s.depth +
+        ' tree — a far smaller difference than its training score suggests.';
     }
-
+    var explanation = 'Training error falls at every depth, from ' + fmt(first.trainMetrics.rmse) + unitSuffix +
+      ' at depth 1 to ' + fmt(f.result.trainMetrics.rmse) + unitSuffix + ' at depth ' + f.depth +
+      ', because a deeper tree can carve out a region for ever fewer training rows. Validation error does not keep up: ' +
+      'beyond depth ' + s.depth + ' it is never more than ' + Math.round(OVERFIT_TOLERANCE * 100) +
+      '% better, so the extra flexibility is mostly fitting noise in these particular rows. ' +
+      'That is overfitting, and the giveaway is the gap between training and test error: for the depth-' + f.depth +
+      ' tree the test error is ' + flexRatio.toFixed(1) + ' times its training error, against ' + sensRatio.toFixed(1) +
+      ' times for the depth-' + s.depth + ' tree. ' + testComparison +
+      ' A training score always flatters a flexible model; judge models on data they have not seen.';
     el('exploreOverfitExplanation').textContent = explanation;
   }
 
@@ -1243,6 +1261,7 @@
 
   function resetResults() {
     state.results = {};
+    state.overfitDemo = null;
     var overfitPanel = el('exploreOverfitDemo');
     if (overfitPanel) overfitPanel.classList.add('is-hidden');
     var wrap = el('exploreComparisonWrap'); if (wrap) wrap.classList.add('is-hidden');

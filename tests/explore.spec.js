@@ -197,17 +197,50 @@ test.describe('Engineering ML Studio — Phase 1 landing + problem-led Explore',
     await expect(page.locator('#exploreComparison')).toContainText('Neural Network');
     await expect(page.locator('#exploreFocusWrap')).toBeVisible();
     await expect(page.locator('#exploreFocusModel option')).toHaveCount(4);
-    // B2: the overfitting demonstration compares both models on the same test rows.
-    const overfitDemo = page.locator('#exploreOverfitDemo');
-    await expect(overfitDemo).toBeVisible();
-    await expect(page.locator('#exploreOverfitTreeMetrics')).toContainText('Training RMSE:');
-    await expect(page.locator('#exploreOverfitTreeMetrics')).toContainText('Test RMSE:');
-    await expect(page.locator('#exploreOverfitForestMetrics')).toContainText('Training RMSE:');
-    await expect(page.locator('#exploreOverfitForestMetrics')).toContainText('Test RMSE:');
-    await expect(page.locator('#exploreOverfitTreePlot svg').first()).toBeVisible();
-    await expect(page.locator('#exploreOverfitForestPlot svg').first()).toBeVisible();
-    await expect(page.locator('#exploreOverfitRmsePlot svg').first()).toBeVisible();
-    await expect(page.locator('#exploreOverfitExplanation')).not.toBeEmpty();
+    // B2: a deliberate overfitting demonstration — the same tree at every depth.
+    await expect(page.locator('#exploreOverfitDemo')).toBeVisible();
+    await expect(page.locator('#exploreOverfitCurvePlot svg').first()).toBeVisible();
+    await expect(page.locator('#exploreOverfitSensiblePlot svg').first()).toBeVisible();
+    await expect(page.locator('#exploreOverfitFlexiblePlot svg').first()).toBeVisible();
+    await expect(page.locator('#exploreOverfitSensibleMetrics')).toContainText('Test RMSE:');
+    await expect(page.locator('#exploreOverfitFlexibleMetrics')).toContainText('Test RMSE:');
+    await expect(page.locator('#exploreOverfitFlexibleTitle')).toContainText('depth 15');
+  });
+
+  test('B2. every engineering example shows overfitting: the deepest tree\'s training error overstates its accuracy', async ({ page }) => {
+    await page.goto('/?localOnly=1');
+    await appReady(page);
+    await enterExplore(page);
+    for (const key of ['pipe', 'cooling', 'steel', 'orifice']) {
+      await page.evaluate(k => window.EMSExplore.selectExample(k), key);
+      await page.evaluate(k => window.EMSExplore.loadDataset(k), key);
+      await page.evaluate(() => window.EMSExplore.goToStage(2));
+      await page.locator('input[name="exploreApproach"][value="compare"]').check();
+      await page.evaluate(() => window.EMSExplore.train());
+      const demo = await page.evaluate(() => {
+        const d = window.EMSExplore.state.overfitDemo;
+        return d && {
+          sensibleDepth: d.sensible.depth,
+          flexibleDepth: d.flexible.depth,
+          flexibleTrain: d.flexible.result.trainMetrics.rmse,
+          flexibleTest: d.flexible.result.testMetrics.rmse,
+          sensibleTest: d.sensible.result.testMetrics.rmse,
+          sensibleTrain: d.sensible.result.trainMetrics.rmse,
+          // The comparison table must be untouched by the demonstration.
+          tableModels: Object.keys(window.EMSExplore.state.results).sort()
+        };
+      });
+      expect(demo, key + ': demo computed').toBeTruthy();
+      expect(demo.tableModels, key).toEqual(['ann', 'forest', 'linear', 'tree']);
+      expect(demo.sensibleDepth, key + ': sensible depth below the maximum').toBeLessThan(demo.flexibleDepth);
+      expect(demo.flexibleTrain, key + ': deeper tree fits training rows more closely').toBeLessThan(demo.sensibleTrain);
+      // The robust lesson: the deep tree's training score overstates its accuracy,
+      // by more than the sensible tree's does.
+      expect(demo.flexibleTest / demo.flexibleTrain, key + ': deep tree test/train gap').toBeGreaterThan(2);
+      expect(demo.flexibleTest / demo.flexibleTrain, key + ': gap wider than the sensible tree')
+        .toBeGreaterThan(demo.sensibleTest / demo.sensibleTrain);
+      await expect(page.locator('#exploreOverfitExplanation'), key).toContainText('That is overfitting');
+    }
   });
 
   test('13. an actual-vs-predicted plot is drawn with unit-labelled axes', async ({ page }) => {
