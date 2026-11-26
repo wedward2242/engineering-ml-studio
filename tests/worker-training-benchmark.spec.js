@@ -2,7 +2,17 @@
 // Copyright 2026 UK Research and Innovation (UKRI)
 //
 // D3a: browser main-thread training benchmark.
-// Opt in with EMS_TRAINING_BENCHMARK=smoke or =full.
+// Opt in with EMS_TRAINING_BENCHMARK=smoke, =full or =pipeline.
+//
+//   full      times MLCore.trainModel alone (one fit, default parameters).
+//   pipeline  times a real Project-mode "Train" click with default settings,
+//             from click to metrics table: preprocessing, the fit, prediction
+//             intervals (30 bootstrap refits for ridge), diagnostics and
+//             rendering. This is what the user actually waits for.
+//
+// Optional overrides (defaults reproduce the original D3a table):
+//   EMS_BENCH_MODELS=forest,ann   EMS_BENCH_SIZES=10000
+//   EMS_BENCH_REPETITIONS=1       EMS_BENCH_TIMEOUT_MS=600000
 // This file measures existing training behaviour only. It does not implement
 // worker training or change any model algorithms.
 
@@ -10,7 +20,7 @@ const { test, expect } = require('@playwright/test');
 
 const MODE = process.env.EMS_TRAINING_BENCHMARK || 'off';
 
-const MODELS = [
+const ALL_MODELS = [
   'linear',
   'ridge',
   'elasticnet',
@@ -24,11 +34,18 @@ const MODELS = [
   'ann'
 ];
 
-const SIZES = [1000, 10000, 50000];
+function envList(name, fallback, parse) {
+  const raw = process.env[name];
+  if (!raw) return fallback;
+  return raw.split(',').map(v => v.trim()).filter(Boolean).map(parse || (v => v));
+}
+
+const MODELS = envList('EMS_BENCH_MODELS', ALL_MODELS);
+const SIZES = envList('EMS_BENCH_SIZES', [1000, 10000, 50000], Number);
 const FEATURES = 30;
 const SEED = 42;
-const REPETITIONS = 3;
-const TRAINING_TIMEOUT_MS = 8000;
+const REPETITIONS = Number(process.env.EMS_BENCH_REPETITIONS) || 3;
+const TRAINING_TIMEOUT_MS = Number(process.env.EMS_BENCH_TIMEOUT_MS) || 8000;
 
 // These are existing implementation limits, not benchmark-imposed limits.
 const MODEL_LIMITS = {
@@ -37,8 +54,8 @@ const MODEL_LIMITS = {
 };
 
 test.skip(
-  !['smoke', 'full'].includes(MODE),
-  'Opt-in D3a benchmark. Set EMS_TRAINING_BENCHMARK=smoke or full.'
+  !['smoke', 'full', 'pipeline'].includes(MODE),
+  'Opt-in D3a benchmark. Set EMS_TRAINING_BENCHMARK=smoke, full or pipeline.'
 );
 
 function median(values) {
@@ -354,6 +371,7 @@ async function benchmarkCombination(page, modelType, rows) {
 }
 
 test('D3a browser main-thread training benchmark', async ({ page }, testInfo) => {
+  test.skip(MODE === 'pipeline', 'pipeline mode runs the end-to-end benchmark only');
   test.setTimeout(MODE === 'full' ? 30 * 60 * 1000 : 60_000);
 
   const cases = MODE === 'smoke'
@@ -403,4 +421,105 @@ test('D3a browser main-thread training benchmark', async ({ page }, testInfo) =>
 
     expect(errors, 'Unexpected benchmark errors').toEqual([]);
   }
+});
+
+// ---------------------------------------------------------------------------
+// End-to-end Project-mode benchmark (EMS_TRAINING_BENCHMARK=pipeline).
+// ---------------------------------------------------------------------------
+
+// Same data-generating formula as prepareData(), written as a CSV so it goes
+// through the real upload, profiling and preprocessing path.
+function benchmarkCsv(rows) {
+  let state = SEED >>> 0;
+  const rng = () => {
+    // mulberry32, identical to MLCore.mulberry32
+    state = (state + 0x6D2B79F5) >>> 0;
+    let t = state;
+    t = Math.imul(t ^ (t >>> 15), t | 1);
+    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+  const header = Array.from({ length: FEATURES }, (_, i) => 'x' + i).concat('y');
+  const lines = [header.join(',')];
+  for (let r = 0; r < rows; r++) {
+    const x = Array.from({ length: FEATURES }, () => rng() * 2 - 1);
+    const y = 1.5 * x[0] - 0.8 * x[1] + 0.25 * x[2] * x[3] + 0.05 * (rng() - 0.5);
+    lines.push(x.map(v => v.toFixed(6)).concat(y.toFixed(6)).join(','));
+  }
+  return lines.join('\n') + '\n';
+}
+
+async function pipelineTrainOnce(page, modelType, csvPath, timeoutMs) {
+  await page.goto('/?localOnly=1');
+  await page.waitForFunction(() => !!(window.LocalRegressionApp && window.LocalRegressionApp.version));
+  await page.locator('.top-nav [data-nav="project"]').click();
+  await page.waitForFunction(() => !!window.EMSProjectShell);
+
+  await page.setInputFiles('#csvFile', csvPath);
+  await expect(page.locator('#targetColumn option', { hasText: /^y$/ })).toHaveCount(1, { timeout: 120_000 });
+
+  await page.evaluate(() => window.EMSProjectShell.goToPanel('step-features'));
+  await page.selectOption('#targetColumn', 'y');
+  await page.click('#autoFeaturesBtn');
+  await page.evaluate(() => window.EMSProjectShell.goToPanel('step-model'));
+  // Some models sit behind an advanced disclosure; select through the radio's
+  // own change event, exactly as a click would.
+  await page.evaluate(type => {
+    const radio = document.querySelector(`#step-model input[name="modelType"][value="${type}"]`);
+    radio.checked = true;
+    radio.dispatchEvent(new Event('change', { bubbles: true }));
+  }, modelType);
+  await expect(page.locator(`#step-model input[name="modelType"][value="${modelType}"]`)).toBeChecked();
+  await page.evaluate(() => window.EMSProjectShell.goToPanel('step-split'));
+
+  const started = Date.now();
+  await page.click('#trainBtn');
+  await expect(page.locator('#metricsTable tbody tr').first()).toBeVisible({ timeout: timeoutMs });
+  return Date.now() - started;
+}
+
+test('D3a end-to-end Project-mode Train click', async ({ page }, testInfo) => {
+  test.skip(MODE !== 'pipeline', 'Set EMS_TRAINING_BENCHMARK=pipeline.');
+  test.setTimeout(3 * 60 * 60 * 1000);
+
+  const fs = require('node:fs');
+  const timeoutMs = Number(process.env.EMS_BENCH_TIMEOUT_MS) || 600_000;
+  const repetitions = Number(process.env.EMS_BENCH_REPETITIONS) || 1;
+  const sizes = envList('EMS_BENCH_SIZES', [1000, 10000], Number);
+  const results = [];
+  const context = page.context();
+  let currentPage = page;
+
+  for (const rows of sizes) {
+    const csvPath = testInfo.outputPath(`bench-${rows}x${FEATURES}.csv`);
+    fs.writeFileSync(csvPath, benchmarkCsv(rows));
+
+    for (const model of MODELS) {
+      const result = { model, rows, features: FEATURES, repetitionsMs: [], medianMs: null, status: 'pending' };
+      const limit = MODEL_LIMITS[model];
+      if (limit && rows > limit) {
+        result.status = 'limit';
+      } else {
+        try {
+          for (let i = 0; i < repetitions; i++) {
+            result.repetitionsMs.push(await pipelineTrainOnce(currentPage, model, csvPath, timeoutMs));
+          }
+          result.medianMs = median(result.repetitionsMs);
+          result.status = 'ok';
+        } catch (error) {
+          result.status = /Timeout|timed out/i.test(String(error && error.message)) ? 'timeout' : 'error';
+          result.detail = String(error && error.message || error).slice(0, 300);
+          void currentPage.close().catch(() => {});
+          currentPage = await context.newPage();
+        }
+      }
+      results.push(result);
+      console.log(`[D3a pipeline] ${model}, ${rows} rows: ${result.status}` +
+        (result.medianMs !== null ? `, median ${result.medianMs.toFixed(0)} ms` : '') +
+        (result.detail ? ` (${result.detail.split('\n')[0]})` : ''));
+    }
+  }
+
+  console.log('WORKER_TRAINING_PIPELINE_RESULTS=' + JSON.stringify(results));
+  expect(results.filter(r => r.status === 'error'), 'Unexpected pipeline errors').toEqual([]);
 });
