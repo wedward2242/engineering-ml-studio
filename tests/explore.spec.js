@@ -295,6 +295,24 @@ test.describe('Engineering ML Studio — Phase 1 landing + problem-led Explore',
     expect(displayedText).toContain(formatted(metrics.mae));
     expect(displayedText).toContain(formatted(metrics.trainRmse));
     expect(displayedText).toContain('kPa');
+
+    // The user's own numbers are visible without opening anything; the generic
+    // definitions are dismissible disclosures, closed by default (WORKPLAN B1).
+    for (const card of [r2Card, rmseCard, maeCard, overfitCard]) {
+      await expect(card.locator('h3')).toBeVisible();
+      await expect(card.locator(':scope > p')).toBeVisible();
+      const explainer = card.locator('details.explore-explainer');
+      await expect(explainer).toHaveCount(1);
+      await expect(explainer).toHaveJSProperty('open', false);
+    }
+    await expect(r2Card.locator(':scope > p')).toContainText(metrics.r2 >= 0 ? '%' : 'average');
+    await expect(rmseCard.locator(':scope > p')).toContainText(formatted(metrics.rmse));
+    await expect(maeCard.locator(':scope > p')).toContainText(formatted(metrics.mae));
+    const r2Explainer = r2Card.locator('details.explore-explainer');
+    await expect(r2Explainer.locator('p')).toBeHidden();
+    await r2Explainer.locator('summary').click();
+    await expect(r2Explainer.locator('p')).toBeVisible();
+    await expect(r2Explainer.locator('p')).toContainText('predicting the average');
   });
 
   test('15. stage 4 gives an engineering interpretation with trend and extrapolation checks', async ({ page }) => {

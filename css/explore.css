@@ -185,6 +185,9 @@
 .explore-insight.level-high { border-left-color: var(--danger); background: #fff6f6; }
 .explore-insight.level-medium { border-left-color: var(--warning-line); background: var(--warning-bg); }
 .explore-insight.level-low { border-left-color: var(--success); background: var(--success-bg); }
+.explore-explainer { margin-top: .45rem; }
+.explore-explainer summary { cursor: pointer; color: var(--primary); font-size: .9rem; }
+.explore-explainer p { margin-top: .35rem; color: var(--muted, var(--text)); font-size: .92rem; }
 
 /* Stage 4: engineering interpretation */
 .explore-engineering { margin-top: 1.25rem; }
