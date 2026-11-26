@@ -153,7 +153,10 @@ async function prepareData(page, rows) {
 }
 
 // Mirror the parameters read by the existing application's
-// getModelParameters() mirrors the default model parameters defined in js/app.js.
+// getModelParameters() mirrors the default model parameters defined in js/app.js
+// (getModelParameters there, and the field defaults in renderModelParameters).
+// The forest row originally used maxFeatures 'all' / 24 thresholds; the app's
+// default is 'sqrt' / 20, about 5x cheaper, so it was corrected.
 async function getModelParameters(_page, modelType) {
   const defaults = {
     linear: {},
@@ -188,8 +191,8 @@ async function getModelParameters(_page, modelType) {
       maxDepth: 8,
       minLeaf: 5,
       sampleRate: 0.8,
-      maxThresholds: 24,
-      maxFeatures: 'all',
+      maxThresholds: 20,
+      maxFeatures: 'sqrt',
       maxRowsPerTree: 20000
     },
 
