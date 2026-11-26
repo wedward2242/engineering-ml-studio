@@ -86,7 +86,7 @@ class SteelDatasetGeneratorTests(unittest.TestCase):
             self.assertGreaterEqual(r[idx["silicon_wt_pct"]], 0.05)
             self.assertLessEqual(r[idx["silicon_wt_pct"]], 0.50)
 
-            self.assertGreaterEqual(r[idx["grain_size_um"]], 5.0)
+            self.assertGreaterEqual(r[idx["grain_size_um"]], 2.0)
             self.assertLessEqual(r[idx["grain_size_um"]], 50.0)
 
             self.assertGreaterEqual(
@@ -185,6 +185,79 @@ class SteelDatasetGeneratorTests(unittest.TestCase):
             "examples/steel_tensile_strength_sample.csv is out of date; "
             "rerun scripts/generate_steel_tensile_strength.py",
         )
+
+
+def _r2(y, pred):
+    import numpy as np
+    return 1.0 - float(np.sum((y - pred) ** 2)) / float(np.sum((y - y.mean()) ** 2))
+
+
+def _linear_cv_r2(X, y, folds=5, seed=0):
+    """Out-of-fold R² of ordinary least squares (numpy only, no scikit-learn)."""
+    import numpy as np
+    idx = np.random.default_rng(seed).permutation(len(y))
+    pred = np.empty_like(y)
+    for test_idx in np.array_split(idx, folds):
+        train_idx = np.setdiff1d(idx, test_idx)
+        A = np.c_[np.ones(len(train_idx)), X[train_idx]]
+        coef = np.linalg.lstsq(A, y[train_idx], rcond=None)[0]
+        pred[test_idx] = np.c_[np.ones(len(test_idx)), X[test_idx]] @ coef
+    return _r2(y, pred)
+
+
+class SteelDatasetTeachingPropertyTests(unittest.TestCase):
+    """Guard the reason this dataset exists (WORKPLAN A2).
+
+    A2 was chosen because the Hall-Petch d^(-1/2) term is genuinely nonlinear
+    against near-linear composition effects, so a linear model does acceptably
+    and a flexible model does better. An earlier version used a dissolved-carbon
+    coefficient that made carbon explain over 90% of the variance: every
+    structural test passed, yet linear regression beat every flexible model.
+    These tests fail if a coefficient or range change removes the lesson.
+    """
+
+    @classmethod
+    def setUpClass(cls):
+        import numpy as np
+        header, rows, _ = gen.generate(rows=500, seed=42)
+        _, clean_rows, _ = gen.generate(rows=500, seed=42, sigma=0.0)
+        data = np.array(rows, dtype=float)
+        cls.X = data[:, :-1]
+        cls.y = data[:, -1]
+        cls.signal = np.array(clean_rows, dtype=float)[:, -1]
+        cls.idx = {name: i for i, name in enumerate(header)}
+
+    def test_hall_petch_dominates_the_signal(self):
+        import numpy as np
+        d = self.X[:, self.idx["grain_size_um"]]
+        carbon = self.X[:, self.idx["carbon_wt_pct"]]
+        hall_petch = gen.HALL_PETCH_K_MPA_SQRT_UM / np.sqrt(d)
+        carbon_term = gen.CARBON_COEFF_MPA_PER_WT_PCT * carbon
+        total = np.var(self.signal)
+        self.assertGreater(np.var(hall_petch) / total, 0.5,
+                           "Hall-Petch term should be the main source of variation")
+        self.assertLess(np.var(carbon_term) / total, 0.25,
+                        "carbon must not swamp the Hall-Petch term")
+
+    def test_linear_is_acceptable_but_clearly_below_the_noise_ceiling(self):
+        ceiling = _r2(self.y, self.signal)
+        linear = _linear_cv_r2(self.X, self.y)
+        self.assertGreater(linear, 0.5, "a straight line should still do acceptably")
+        self.assertGreater(ceiling - linear, 0.10,
+                           "a flexible model needs real headroom over linear "
+                           f"(linear {linear:.3f}, noise ceiling {ceiling:.3f})")
+
+    def test_the_gap_is_the_hall_petch_curvature_not_noise(self):
+        import numpy as np
+        X = self.X.copy()
+        X[:, self.idx["grain_size_um"]] = X[:, self.idx["grain_size_um"]] ** -0.5
+        ceiling = _r2(self.y, self.signal)
+        self.assertGreater(_linear_cv_r2(X, self.y), ceiling - 0.02,
+                           "linearising d^(-1/2) should close the gap to the noise ceiling")
+
+    def test_yield_strength_is_plausible_for_structural_steel(self):
+        self.assertGreater(self.y.min(), 100.0)
+        self.assertLess(self.y.max(), 700.0)
 
 
 def _is_finite(x):

@@ -105,7 +105,11 @@
       target: 'yield_strength_mpa',
       targetLabel: 'yield strength',
       unit: 'MPa',
-      intro: 'Structural engineers need to understand how steel composition, grain size and processing conditions affect yield strength. This synthetic example explores how these factors relate to yielding, but it is not suitable for material selection or structural design.',
+      intro: 'Structural engineers need to understand how steel composition, grain size and processing conditions affect yield strength. ' +
+        'Most of the variation here comes from grain size, through the Hall–Petch relationship: strength rises with one over the square root of grain size, ' +
+        'so the effect is strongly curved and grows quickly for very fine grains. A straight-line model can capture the general trend, but a flexible model ' +
+        'should do noticeably better. Real tensile tests also scatter from specimen to specimen, so no model can predict every value exactly. ' +
+        'This synthetic example is not suitable for material selection or structural design.',
       inputs: [
         { name: 'carbon_wt_pct', label: 'Carbon content', unit: 'wt%' },
         { name: 'manganese_wt_pct', label: 'Manganese content', unit: 'wt%' },
@@ -125,7 +129,7 @@
         { feature: 'tempering_temperature_c', label: 'tempering temperature', direction: 'decrease' },
         { feature: 'test_temperature_c', label: 'test temperature', direction: 'decrease' }
       ],
-      rangeText: 'The dataset has 500 rows. Inputs cover carbon 0.02–0.12 wt%, manganese 0.30–1.60 wt%, silicon 0.05–0.50 wt%, grain size 5–50 µm, tempering temperature 200–650 °C and test temperature −20–100 °C. Yield strength is expressed in MPa.',
+      rangeText: 'The dataset has 500 rows. Inputs cover carbon 0.02–0.12 wt%, manganese 0.30–1.60 wt%, silicon 0.05–0.50 wt%, grain size 2–50 µm, tempering temperature 200–650 °C and test temperature −20–100 °C. Yield strength ranges from roughly 140 to 590 MPa, with about 4% synthetic specimen-to-specimen scatter.',
       disclaimer: 'This is a <strong>synthetic demonstration dataset</strong>, generated from a simplified Hall–Petch and solid-solution strengthening relationship, with simplified temperature effects and added noise. It is not experimental, validated or safety-grade data, and predictions must not be used for real material selection, structural design or safety-critical qualification.',
       schematic: false,
       approxRows: 500

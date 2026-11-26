@@ -49,9 +49,18 @@ grain-size unit used by the generator.
 - \(a_{\mathrm{Mn}} = 32.3\) MPa/wt%
 - \(a_{\mathrm{Si}} = 83.2\) MPa/wt%
 
-The carbon coefficient (\(a_C = 5000\) MPa/wt%) and the temperature coefficients used for tempering
+The carbon coefficient (\(a_C = 500\) MPa/wt%) and the temperature coefficients used for tempering
 and test temperature are project-defined effective coefficients for this synthetic teaching dataset,
 not universal literature material constants.
+
+Why the carbon coefficient is modest: interstitial solid-solution strengthening by carbon is large
+per unit of *dissolved* carbon (of order 5000 MPa/wt%), but the solubility of carbon in ferrite is
+at most about 0.02 wt% and far lower at room temperature. In these 0.02–0.12 wt% steels most of the
+carbon is present as pearlite or carbides, and Pickering's ferrite–pearlite yield equation has no
+direct carbon term at all. Applying the dissolved-carbon coefficient to total carbon would make
+carbon dominate the dataset (over 90% of the variance in yield strength, with values above 900 MPa)
+and would hide the Hall–Petch nonlinearity this dataset exists to teach. 500 MPa/wt% gives carbon a
+visible but secondary effect of about 10–60 MPa across the sampled range.
 
 These coefficients are used only to construct an educational synthetic dataset. The generated values
 are not validated material-property data for any particular grade of structural steel.
@@ -69,7 +78,12 @@ Assumptions and simplifications
   approximately linear solid-solution strengthening contributions from carbon,
   manganese and silicon.
 * Grain size is treated as an input microstructural variable and is assumed to
-  be representative of the effective grain size relevant to yielding.
+  be representative of the effective grain size relevant to yielding. It is
+  sampled log-uniformly over 2–50 µm (ultrafine thermomechanically processed
+  ferrite to coarse annealed ferrite). Grain sizes span an order of magnitude and
+  are conventionally graded on a logarithmic scale (ASTM E112), and log-uniform
+  sampling places enough samples at small grain sizes, where the d^(-1/2) curve
+  bends most, for the nonlinearity to be learnable.
 * Tempering temperature and test temperature are included as input variables
   but are represented using simplified empirical effects rather than a
   complete metallurgical model.
@@ -123,8 +137,11 @@ MANGANESE_COEFF_MPA_PER_WT_PCT = 32.3
 SILICON_COEFF_MPA_PER_WT_PCT = 83.2
 
 # --- Project-defined synthetic carbon contribution --------------------------
-# Used as an effective carbon-strengthening term for this teaching dataset.
-CARBON_COEFF_MPA_PER_WT_PCT = 5000.0
+# Effective term for total carbon, most of which is present as pearlite or
+# carbides rather than in solution. See "Why the carbon coefficient is modest"
+# in the module docstring before changing it: a dissolved-carbon value (~5000)
+# makes carbon swamp the Hall-Petch term and removes the teaching contrast.
+CARBON_COEFF_MPA_PER_WT_PCT = 500.0
 
 # --- Project-defined synthetic temperature corrections ----------------------
 TEMPER_REFERENCE_C = 400.0
@@ -143,7 +160,7 @@ RANGES = {
     "carbon_wt_pct":           (0.02, 0.12),
     "manganese_wt_pct":        (0.30, 1.60),
     "silicon_wt_pct":          (0.05, 0.50),
-    "grain_size_um":           (5.0, 50.0),
+    "grain_size_um":           (2.0, 50.0),   # log-uniform
     "tempering_temperature_c": (200.0, 650.0),
     "test_temperature_c":      (-20.0, 100.0),
 }
@@ -199,6 +216,10 @@ def _sample_uniform(rng, low, high, n):
     return rng.uniform(low, high, n)
 
 
+def _sample_log_uniform(rng, low, high, n):
+    return np.exp(rng.uniform(math.log(low), math.log(high), n))
+
+
 
 def generate(rows: int = 500, seed: int = 42, sigma: float = NOISE_SIGMA):
     """Return (header, list-of-rows, diagnostics) for the synthetic dataset."""
@@ -220,7 +241,7 @@ def generate(rows: int = 500, seed: int = 42, sigma: float = NOISE_SIGMA):
     carbon = _sample_uniform(rng, *RANGES["carbon_wt_pct"], rows)
     manganese = _sample_uniform(rng, *RANGES["manganese_wt_pct"], rows)
     silicon = _sample_uniform(rng, *RANGES["silicon_wt_pct"], rows)
-    grain_size = _sample_uniform(rng, *RANGES["grain_size_um"], rows)
+    grain_size = _sample_log_uniform(rng, *RANGES["grain_size_um"], rows)
     tempering_temperature = _sample_uniform(
         rng, *RANGES["tempering_temperature_c"], rows
     )

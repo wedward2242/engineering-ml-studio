@@ -215,9 +215,18 @@ class SteelNotebookExecutionTests(unittest.TestCase):
         tree = self._test_r2("Decision Tree")
         forest = self._test_r2("Random Forest")
 
-        self.assertTrue(0.85 <= linear <= 1.0, f"linear test R2 out of range: {linear}")
+        self.assertTrue(0.60 <= linear <= 0.92, f"linear test R2 out of range: {linear}")
         self.assertTrue(0.65 <= tree <= 0.98, f"tree test R2 out of range: {tree}")
         self.assertTrue(0.80 <= forest <= 1.0, f"forest test R2 out of range: {forest}")
+
+    def test_flexible_model_beats_linear(self):
+        # The lesson the steel dataset exists for (WORKPLAN A2): the curved
+        # Hall-Petch term means a linear model does acceptably and a flexible
+        # model does clearly better. The narrative in section 10 depends on it.
+        linear = self._test_r2("Linear Regression")
+        forest = self._test_r2("Random Forest")
+        self.assertGreater(forest - linear, 0.05,
+                           f"forest ({forest}) should clearly beat linear ({linear})")
 
     def test_predictions_are_physically_plausible(self):
         self.assertRegex(
