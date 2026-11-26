@@ -298,15 +298,15 @@ test.describe('Engineering ML Studio — Phase 1 landing + problem-led Explore',
     await expect(page.locator('#exploreEngineering')).toContainText('Not an engineering dataset');
   });
 
-  test('A4. Fin, steel and orifice examples load their correct problem descriptions and targets', async ({ page }) => {
+  test('A4. Convective cooling, steel and orifice examples load their correct problem descriptions and targets', async ({ page }) => {
     await page.goto('/?localOnly=1');
     await appReady(page);
     await enterExplore(page);
 
     const examples = [
       {
-        key: 'fin',
-        description: 'predict heat dissipation',
+        key: 'cooling',
+        description: 'predict the convective heat-transfer rate',
         target: 'Heat dissipation',
         unit: 'W'
       },
@@ -339,7 +339,7 @@ test.describe('Engineering ML Studio — Phase 1 landing + problem-led Explore',
 
   // E1: Direct links must open the requested Explore activity, not just the Explore view.
   test('E1. direct links open every supported Explore example', async ({ page }) => {
-    const examples = ['pipe', 'fin', 'steel', 'orifice', 'nonlinear'];
+    const examples = ['pipe', 'cooling', 'steel', 'orifice', 'nonlinear'];
 
     for (const example of examples) {
       // A fresh navigation verifies the route during initial application startup.
@@ -384,22 +384,22 @@ test.describe('Engineering ML Studio — Phase 1 landing + problem-led Explore',
     // Open the secondary example selector before interacting with its radio buttons.
     await page.locator('.explore-other-examples summary').click();
     // Select two activities so the browser has distinct example routes to revisit.
-    await page.locator('#exploreExampleSwitch input[value="fin"]').check();
-    await expect(page).toHaveURL(/#explore\/fin$/);
+    await page.locator('#exploreExampleSwitch input[value="cooling"]').check();
+    await expect(page).toHaveURL(/#explore\/cooling$/);
 
     await page.locator('#exploreExampleSwitch input[value="steel"]').check();
     await expect(page).toHaveURL(/#explore\/steel$/);
 
-    // Back should restore fin, then pipe.
+    // Back should restore cooling, then pipe.
     await page.goBack();
-    await expect(page.locator('#exploreExampleSwitch input[value="fin"]')).toBeChecked();
+    await expect(page.locator('#exploreExampleSwitch input[value="cooling"]')).toBeChecked();
 
     await page.goBack();
     await expect(page.locator('#exploreExampleSwitch input[value="pipe"]')).toBeChecked();
 
     // Forward should restore the same selections in the same order.
     await page.goForward();
-    await expect(page.locator('#exploreExampleSwitch input[value="fin"]')).toBeChecked();
+    await expect(page.locator('#exploreExampleSwitch input[value="cooling"]')).toBeChecked();
 
     await page.goForward();
     await expect(page.locator('#exploreExampleSwitch input[value="steel"]')).toBeChecked();

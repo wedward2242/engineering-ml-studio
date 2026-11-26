@@ -69,29 +69,32 @@
       approxRows: 500
     },
     {
-      key: 'fin',
-      file: './examples/fin_heat_dissipation_sample.csv',
+      key: 'cooling',
+      file: './examples/convective_cooling_sample.csv',
       engineering: true,
-      title: 'Predict heat dissipation from a fin',
-      short: 'Heat dissipation from a fin',
+      title: 'Predict convective heat loss from a hot surface',
+      short: 'Convective cooling',
       target: 'heat_dissipation_w',
       targetLabel: 'heat dissipation',
       unit: 'W',
-      intro: 'A fin increases the surface area available for convective heat transfer. Here we predict heat dissipation from the convection coefficient, fin area and temperature difference.',
+      intro: 'A hot surface — an electronics enclosure, a pipe wall, a heat-sink base — loses heat to the surrounding air or liquid by convection. ' +
+        'Here we predict the convective heat-transfer rate from the convection coefficient, the surface area and the surface-to-fluid temperature difference. ' +
+        'In Newton’s law of cooling these three inputs <strong>multiply</strong> rather than add, so doubling any one of them doubles the heat loss. ' +
+        'A straight-line model, which can only add weighted inputs, struggles with that; more flexible models do much better.',
       inputs: [
         { name: 'h_w_m2k', label: 'Convection coefficient', unit: 'W/m²K' },
-        { name: 'area_m2', label: 'Fin area', unit: 'm²' },
+        { name: 'area_m2', label: 'Surface area', unit: 'm²' },
         { name: 'delta_t_k', label: 'Temperature difference', unit: 'K' }
       ],
       features: ['h_w_m2k', 'area_m2', 'delta_t_k'],
-      keyInputs: 'convection coefficient, fin area, temperature difference',
-      trendText: 'Heat dissipation generally increases when the convection coefficient, fin area or temperature difference increases.',
+      keyInputs: 'convection coefficient, surface area, temperature difference',
+      trendText: 'Heat dissipation increases when the convection coefficient, surface area or temperature difference increases.',
       trends: [
         { feature: 'h_w_m2k', label: 'convection coefficient', direction: 'increase' },
-        { feature: 'area_m2', label: 'fin area', direction: 'increase' },
+        { feature: 'area_m2', label: 'surface area', direction: 'increase' },
         { feature: 'delta_t_k', label: 'temperature difference', direction: 'increase' }
       ],
-      rangeText: 'The dataset has 500 rows. Heat dissipation ranges from a few watts to roughly 20 kW across the sampled synthetic conditions.',
+      rangeText: 'The dataset has 500 rows. The convection coefficient spans 5–500 W/m²K (natural convection in air up to forced convection in liquids), so heat dissipation ranges from a few watts to roughly 20 kW.',
       disclaimer: 'This is a <strong>synthetic demonstration dataset</strong>, generated from Newton’s law of cooling with a fixed random seed and a small amount of added noise. It is not experimental, validated or safety-grade data, and must not be used for real design.',
       schematic: false,
       approxRows: 500

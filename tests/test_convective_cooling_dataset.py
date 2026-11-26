@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
 # SPDX-License-Identifier: Apache-2.0
 # Copyright 2026 UK Research and Innovation (UKRI)
-"""Tests for the synthetic fin heat-dissipation dataset generator.
+"""Tests for the synthetic convective-cooling dataset generator.
 
 These use only the Python standard library plus numpy (already required by the
 generator). Run with:
 
-    python3 -m unittest tests.test_fin_dataset      # from the repo root
-    python3 tests/test_fin_dataset.py
+    python3 -m unittest tests.test_convective_cooling_dataset      # from the repo root
+    python3 tests/test_convective_cooling_dataset.py
 
 They check that the documented, deterministic generator behaves as promised:
 fixed columns, requested row count, sensible physical ranges, strictly positive
@@ -25,9 +25,9 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.normpath(os.path.join(HERE, ".."))
 sys.path.insert(0, ROOT)
 
-from scripts import generate_fin_heat_dissipation as gen
+from scripts import generate_convective_cooling as gen
 
-BUNDLED_CSV = os.path.join(ROOT, "examples", "fin_heat_dissipation_sample.csv")
+BUNDLED_CSV = os.path.join(ROOT, "examples", "convective_cooling_sample.csv")
 
 def rows_to_csv_text(header, rows):
     buf = io.StringIO()
@@ -37,7 +37,7 @@ def rows_to_csv_text(header, rows):
     return buf.getvalue()
 
 
-class FinDatasetGeneratorTests(unittest.TestCase):
+class ConvectiveCoolingDatasetGeneratorTests(unittest.TestCase):
     def test_expected_columns_and_units(self):
         header, rows, _ = gen.generate(rows=50, seed=42)
 
@@ -167,8 +167,8 @@ class FinDatasetGeneratorTests(unittest.TestCase):
         self.assertEqual(
             actual,
             expected,
-            "examples/fin_heat_dissipation_sample.csv is out of date; "
-            "rerun scripts/generate_fin_heat_dissipation.py",
+            "examples/convective_cooling_sample.csv is out of date; "
+            "rerun scripts/generate_convective_cooling.py",
         )
 
 

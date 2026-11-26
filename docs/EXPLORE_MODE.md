@@ -219,7 +219,7 @@ Explore supports direct links to each of its five activities. These links open t
 | --- | --- |
 | `#explore` | Opens Explore with Pipe selected by default. |
 | `#explore/pipe` | Pipe pressure drop |
-| `#explore/fin` | Fin heat dissipation |
+| `#explore/cooling` | Convective cooling |
 | `#explore/steel` | Steel strength |
 | `#explore/orifice` | Orifice flow |
 | `#explore/nonlinear` | Nonlinear demonstration |

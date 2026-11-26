@@ -21,7 +21,7 @@
   // These are the only supported nested Explore routes.
   // Keeping this list here lets the router reject unknown URLs during startup,
   // before the Explore module has finished loading.
-  var EXPLORE_EXAMPLE_KEYS = ['pipe', 'fin', 'steel', 'orifice', 'nonlinear'];
+  var EXPLORE_EXAMPLE_KEYS = ['pipe', 'cooling', 'steel', 'orifice', 'nonlinear'];
 
   // Convert the current URL hash into a validated top-level route.
   function routeFromHash() {

@@ -9,7 +9,7 @@ The files fall into two groups:
 - **Inherited from Local Regression Studio** (`house_prices_sample.csv`,
   `nonlinear_regression_sample.csv`, `nonlinear_prediction_sample.csv`) — introduced by Yu Duan;
   reusable under the MIT licence (confirmed).
-- **New to Engineering ML Studio** (`pipe_pressure_drop_sample.csv`, `fin_heat_dissipation_sample.csv`, `steel_tensile_strength_sample.csv`, `orifice_flow_sample.csv`) — documented, deterministic, synthetic engineering datasets created for the problem-led Explore mode, each with a committed generator script. See the individual dataset sections below for details.
+- **New to Engineering ML Studio** (`pipe_pressure_drop_sample.csv`, `convective_cooling_sample.csv`, `steel_tensile_strength_sample.csv`, `orifice_flow_sample.csv`) — documented, deterministic, synthetic engineering datasets created for the problem-led Explore mode, each with a committed generator script. See the individual dataset sections below for details.
 
 > ✅ **Reuse status confirmed.** Yu Duan has confirmed that the **inherited**
 > bundled example datasets may be reused under the **MIT licence** (see
@@ -17,7 +17,7 @@ The files fall into two groups:
 > of the original Local Regression Studio work.
 >
 > The new Engineering ML Studio datasets—`pipe_pressure_drop_sample.csv`,
-> `fin_heat_dissipation_sample.csv`, `steel_tensile_strength_sample.csv`, and
+> `convective_cooling_sample.csv`, `steel_tensile_strength_sample.csv`, and
 > `orifice_flow_sample.csv`—are released under the project's Apache-2.0 licence,
 > with copyright in new contributions held by UKRI.
 
@@ -36,7 +36,7 @@ All datasets are intended for machine-learning practice and exploration. **Do no
 | `nonlinear_regression_sample.csv` | Demonstrates nonlinear regression. Exact generating function and noise model: **not documented**. | Observed numeric ranges: time 1–360; x1 −3.0–3.0; x2 −1.122292–1.122058; target 0.161784–4.507024. These are observed values, not documented generator ranges. | Seed and generator: **not documented**. Appears generated for demonstration; exact provenance remains unconfirmed. Training only; not for engineering design or real-world decisions. |
 | `nonlinear_prediction_sample.csv` | Companion dataset for demonstrating nonlinear prediction. Exact generating function and noise model: **not documented**. | Observed numeric ranges (not documented generator ranges): time 1–359; x1 −3.0–2.983287; x2 −1.046103–1.122058; target 0.161784–4.431533. | Seed and generator: **not documented**. Appears generated for demonstration; exact provenance remains unconfirmed. Training only; not for engineering design or real-world decisions. |
 | `pipe_pressure_drop_sample.csv` | Pipe-flow pressure drop using Darcy–Weisbach: \(\Delta p=f(L/D)(\rho v^2/2)\), with friction factor calculated using Reynolds number and the documented laminar/Haaland correlations. | Length 2–30 m; diameter 0.02–0.20 m; velocity 0.5–4.0 m/s; density 850–1050 kg/m³; dynamic viscosity \(3\times10^{-4}\)–\(2\times10^{-3}\) Pa·s. | Seed 42; 500 rows by default; multiplicative lognormal noise, \(\sigma=0.05\). Synthetic, physically informed training data only—not experimental or validated design data. |
-| `fin_heat_dissipation_sample.csv` | Convective heat dissipation using Newton's law of cooling: \(Q=hA\Delta T\). | Heat-transfer coefficient 5–500 W/(m²·K); area 0.001–0.5 m²; temperature difference 5–100 K. | Seed 42; 500 rows by default; multiplicative lognormal noise, \(\sigma=0.05\). Synthetic, physically informed training data only—not for thermal design. |
+| `convective_cooling_sample.csv` | Convective heat dissipation using Newton's law of cooling: \(Q=hA\Delta T\). | Heat-transfer coefficient 5–500 W/(m²·K); area 0.001–0.5 m²; temperature difference 5–100 K. | Seed 42; 500 rows by default; multiplicative lognormal noise, \(\sigma=0.05\). Synthetic, physically informed training data only—not for thermal design. |
 | `steel_tensile_strength_sample.csv` | Synthetic yield-strength demonstration using Hall–Petch strengthening, approximate linear composition terms, and project-defined temperature corrections: \(\sigma_y=\sigma_0+kd^{-1/2}+a_C C+a_{Mn}Mn+a_{Si}Si-0.20(T_{\mathrm{temper}}-400)-0.20(T_{\mathrm{test}}-20)\). The temperature terms are project-defined, simplified effects, not universal material constants. | Carbon 0.02–0.12 wt%; manganese 0.30–1.60 wt%; silicon 0.05–0.50 wt%; grain size 2–50 µm (log-uniform); tempering temperature 200–650 °C; test temperature −20–100 °C. Yield strength about 140–590 MPa. | Seed 42; 500 rows by default; multiplicative lognormal noise, \(\sigma=0.04\). Synthetic training data only—not for structural design, safety-critical use, or material certification. |
 | `orifice_flow_sample.csv` | Simplified orifice-flow relationship: \(Q=C_d A\sqrt{2\Delta p/\rho}\), where \(A=\pi d^2/4\). It does not reproduce the full ISO 5167 calculation. | Pressure difference 1,000–100,000 Pa; diameter 0.005–0.050 m; density 850–1050 kg/m³; discharge coefficient 0.60–0.65. | Seed 42; 500 rows by default; multiplicative lognormal noise, \(\sigma=0.05\). Synthetic training data only—not for real flow-system design. |
 
@@ -158,9 +158,9 @@ below, with generator documentation.)*
 
 - **Licence:** Apache-2.0 (the project's licence); see the repository licence files.
 
-## `fin_heat_dissipation_sample.csv` (new — Explore mode)
+## `convective_cooling_sample.csv` (new — Explore mode)
 
-- **Location:** `examples/fin_heat_dissipation_sample.csv`
+- **Location:** `examples/convective_cooling_sample.csv`
 
 - **Rows:** 500 (plus header)
 
@@ -192,14 +192,14 @@ below, with generator documentation.)*
   row count, and numpy version reproduce the same output.
 
 - **Generator (documented, reproducible):**
-  [`../scripts/generate_fin_heat_dissipation.py`](../scripts/generate_fin_heat_dissipation.py). Regenerate
+  [`../scripts/generate_convective_cooling.py`](../scripts/generate_convective_cooling.py). Regenerate
   the bundled file with:
 
   ```bash
-  python3 scripts/generate_fin_heat_dissipation.py --rows 500 --seed 42
+  python3 scripts/generate_convective_cooling.py --rows 500 --seed 42
   ```
 
-- **Tests:** [`../tests/test_fin_dataset.py`](../tests/test_fin_dataset.py) checks the columns/units,
+- **Tests:** [`../tests/test_convective_cooling_dataset.py`](../tests/test_convective_cooling_dataset.py) checks the columns/units,
   row count, strictly-positive/finite values, sensible ranges, determinism, and that the committed CSV
   matches a fresh default generation byte-for-byte.
 

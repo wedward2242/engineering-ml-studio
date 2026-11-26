@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 # SPDX-License-Identifier: Apache-2.0
 # Copyright 2026 UK Research and Innovation (UKRI)
-"""Generate a synthetic, physically-informed fin heat-dissipation dataset.
+"""Generate a synthetic, physically-informed convective-cooling dataset.
 
 This produces the bundled Explore-mode demonstration dataset
-``examples/fin_heat_dissipation_sample.csv``. It is a training demonstration
+``examples/convective_cooling_sample.csv``. It is a training demonstration
 dataset only — it is synthetic, not experimental, and must not be treated as
 validated, safety-grade, or design-quality engineering data.
 
@@ -28,6 +28,10 @@ Assumptions and simplifications
   by their temperature difference ΔT.
 * Radiation, conduction losses through supports, and other secondary effects
   are not modelled.
+* This is a plain convecting surface, not an extended surface (fin). A fin's
+  dissipation also depends on its conductivity, cross-section and length
+  through the fin efficiency, tanh(mL)/(mL); none of that is modelled, which
+  is why the dataset is named convective cooling rather than fin dissipation.
 * The dataset is synthetic and intended for machine-learning demonstration
   and training only.
 
@@ -44,9 +48,9 @@ so the dataset is reproducible.
 
 Usage
 -----
-    python3 scripts/generate_fin_heat_dissipation.py
-    python3 scripts/generate_fin_heat_dissipation.py --rows 500 --seed 42
-    python3 scripts/generate_fin_heat_dissipation.py --out /tmp/fin.csv
+    python3 scripts/generate_convective_cooling.py
+    python3 scripts/generate_convective_cooling.py --rows 500 --seed 42
+    python3 scripts/generate_convective_cooling.py --out /tmp/cooling.csv
 
 Licence
 -------
@@ -178,7 +182,7 @@ def write_csv(path, header, rows):
 def main():
     here = os.path.dirname(os.path.abspath(__file__))
     default_out = os.path.normpath(
-        os.path.join(here, "..", "examples", "fin_heat_dissipation_sample.csv")
+        os.path.join(here, "..", "examples", "convective_cooling_sample.csv")
     )
     parser = argparse.ArgumentParser(description=__doc__.split("\n")[0])
     parser.add_argument("--out", default=default_out, help="output CSV path")
