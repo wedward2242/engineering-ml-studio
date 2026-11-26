@@ -86,6 +86,18 @@
       ? '#explore/' + route.exampleKey
       : '#' + mode;
 
+    // Returning to Explore through the navigation must name the example that is
+    // actually selected, or an instructor copying the address bar would share the
+    // wrong activity. Only on navigation clicks: a typed or traversed '#explore'
+    // still means the default example, as documented. Plain '#explore' remains
+    // the canonical URL for the default (pipe) example.
+    if (mode === 'explore' && options.fromNav && global.EMSExplore && global.EMSExplore.state) {
+      var selected = global.EMSExplore.state.exampleKey;
+      if (selected && selected !== 'pipe' && EXPLORE_EXAMPLE_KEYS.indexOf(selected) !== -1) {
+        nextHash = '#explore/' + selected;
+      }
+    }
+
     if (global.location && nextHash !== global.location.hash) {
       try { global.history.replaceState(null, '', nextHash); }
       catch (_) { global.location.hash = nextHash.slice(1); }
@@ -125,7 +137,7 @@
     var mode = trigger.getAttribute('data-mode');
     if (!isValid(mode)) return;
     event.preventDefault();
-    show(mode);
+    show(mode, { fromNav: true });
   }
 
   function init() {

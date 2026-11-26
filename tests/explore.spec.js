@@ -456,6 +456,20 @@ test.describe('Engineering ML Studio — Phase 1 landing + problem-led Explore',
     await expect(page.locator('#exploreExampleSwitch input[value="steel"]')).toBeChecked();
   });
 
+  test('E1. returning to Explore through the navigation keeps the selected example in the URL', async ({ page }) => {
+    await page.goto('/?localOnly=1#explore/cooling');
+    await appReady(page);
+    await expect(page.locator('#exploreExampleSwitch input[value="cooling"]')).toBeChecked();
+
+    await page.locator('.top-nav [data-nav="home"]').click();
+    await expect(page).toHaveURL(/#home$/);
+    await page.locator('.top-nav [data-nav="explore"]').click();
+
+    // The address bar must name the activity on screen, so it can be shared.
+    await expect(page).toHaveURL(/#explore\/cooling$/);
+    await expect(page.locator('#exploreExampleSwitch input[value="cooling"]')).toBeChecked();
+  });
+
   test('17. no non-local requests occur during the Explore workflow', async ({ page }) => {
     const { externalRequests } = instrument(page);
     await page.goto('/?localOnly=1');
